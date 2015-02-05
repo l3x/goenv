@@ -44,6 +44,7 @@ GOENV_VERSION=`echo "$INFO"|grep Version:`
 BREW_GO_ROOT=/usr/local/Cellar/go
 GOENV_VER_FILE=$HOME/.goenv/version
 GOOD_STATUS="√ All good."
+TIP="Don't forget to source goenv when running genv commands that change your Go version (For more info run $ goenv info)"
 
 function goversion {
     GOTEST=(`go version 2>/dev/null`) 
@@ -59,15 +60,36 @@ function goversions {
 }
 
 function usage {
-  echo $USAGE
+    echo $USAGE
+}
+
+function lastest_brew_go_version {
+    echo `goenv versions available|tail +1|head -n 1|cut -d' ' -f1`
+}
+
+function switchtogo_version {
+    if [ -s $GOENV_VER_FILE ]; then
+        echo `cat $GOENV_VER_FILE`
+    else
+        echo ""
+    fi
 }
 
 function goenv_version {
-  echo $GOENV_VERSION|cut -d' ' -f2
+    echo $GOENV_VERSION|cut -d' ' -f2
 }
+
+function set_goenv_version {
+    echo `goenv_version` > $GOENV_VER_FILE
+}
+
 
 function switchgo {
     VER=$1
+    if [ "$VER" == "" ]; then
+        echo "switchgo called without passing a go version to switch to."
+        exit 0
+    fi
     echo "Switching Go to version $VER ..."
 
     GOVERSIONS=`brew info go|grep Cellar`
@@ -89,7 +111,7 @@ function switchgo {
     if [[ -e $NEW_GO_BIN ]] && [[ -e $GO_BINARY ]]; then
         brew link --overwrite go  &>/dev/null
         brew switch go $VER &>/dev/null
-        echo $VER > "$GOENV_VER_FILE"
+        echo $VER > $GOENV_VER_FILE
     else
         echo "ERROR:  $NEW_GO_BIN should exist and \$(which go) should be a link."
     fi
@@ -115,10 +137,8 @@ function install {
     fi
 
     HOMEBREW_BASE=$( brew --prefix )
-    set -x
     pushd $HOMEBREW_BASE
     `$GITCMD`
-    { set +x; } &>/dev/null
     if [ "$?" != "0" ];then
         echo "Unable to install version ($VER)"
         exit 1
@@ -128,13 +148,14 @@ function install {
         brew install go
         { set +x; } &>/dev/null
     fi
+    set_goenv_version
     popd
 }
 
 function uninstall {
     VER=$1
     if [[ $BREW_GO_ROOT == *"Cellar"* ]] && [[ -d $BREW_GO_ROOT/$VER ]]; then
-        echo -n "Removing $BREW_GO_ROOT/$VER..."
+        printf "Removing $BREW_GO_ROOT/$VER..."
         rm -rf $BREW_GO_ROOT/$VER
         echo "Done."
     else
@@ -180,7 +201,17 @@ if [ "$1" == "-?" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "he
     echo "$INFO"
 
 elif [ "$1" == "init" ]; then
-    if [ -f $GOENV_VER_FILE ]; then
+    LATEST_BREW_GO_VER="$(lastest_brew_go_version)"
+    if ! which go > /dev/null && [ "$LATEST_BREW_GO_VER" != "" ]; then 
+        echo ""
+        echo "Go is not currently installed but homebrew has a version.  Press Enter to install Go version $LATEST_BREW_GO_VER --or-- CTRL+C to Cancel."
+        read x
+        install $LATEST_BREW_GO_VER
+        echo "GOENV_VER_FILE: $GOENV_VER_FILE"
+        echo "$LATEST_BREW_GO_VER" > $GOENV_VER_FILE
+    fi
+    
+    if [ -s $GOENV_VER_FILE ]; then
         switchgo `cat $GOENV_VER_FILE`
     fi
 
@@ -237,17 +268,25 @@ elif [ "$1" == "check" ]; then
         echo "Go version: `goversion`"
         echo "\$GOROOT   : $GOROOT"
         echo ""
-        echo "Don't forget to source goenv when switching Go versions! (For more info run $ goenv info.)"
+        echo "$TIP"
         echo ""
         exit 1
     fi
 
 elif [ "$1" == "info" ]; then
-    echo "Current Go version: `goversion`"
-    echo "STATUS: `check`"
+    status="$(check)"
+    echo "STATUS: $status"
+    if [[ ! "$status" == *"√"* ]]; then
+        echo "TIP: $TIP"
+    fi    
     echo "GOROOT: $GOROOT"
     echo "GOPATH: $GOPATH"
     echo "GOBIN : $GOBIN"
+    echo "GOOS  : $GOOS"
+    echo "GOARCH: $GOARCH"
+    echo "Current Go version: `goversion`"
+    echo "switchtogo version: `switchtogo_version`"
+    echo "switchtogo version file: $GOENV_VER_FILE"
     echo "`goversions`"
 
 elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then

@@ -114,7 +114,7 @@ $ git clone https://github.com/l3x/goenv.git ~/.goenv
 
 #### 2) Add `~/.goenv/bin` to your `$PATH` for access to the `goenv` command-line utility.
 ~~~
-$ echo 'export PATH="$HOME/.goenv/bin:$PATH"' >> ~/.bashrc
+$ echo ';export PATH="$HOME/.goenv/bin:$PATH"; if which goenv > /dev/null; then . goenv init; fi' >> ~/.bashrc
 ~~~
 
 #### 3) Restart your shell so that PATH changes take effect.

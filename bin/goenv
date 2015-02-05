@@ -1,7 +1,6 @@
 #!/bin/sh
 read -d '' INFO << TEXT
 Filename:    goenv
-Version:     1.0.1 
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
@@ -33,10 +32,6 @@ Examples:
   goenv versions available             # To get a list of available Go versions
   goenv install 1.3.3                  # To install version 1.3.3
   goenv uninstall 1.3.3                # To uninstall version 1.3.3
-  
-Version History:
-1.0.0 - Initial release
-1.0.1 - Improve check logic and add colors
 TEXT
 
 USAGE=`echo "$INFO"|grep Usage`
@@ -44,7 +39,7 @@ GOENV_VERSION=`echo "$INFO"|grep Version:`
 BREW_GO_ROOT=/usr/local/Cellar/go
 GOENV_VER_FILE=$HOME/.goenv/version
 GOOD_STATUS="√ All good."
-TIP="Don't forget to source goenv when running genv commands that change your Go version (For more info run $ goenv info)"
+TIP="Don't forget to source goenv when running goenv commands that change your Go version (For more info run $ goenv info)"
 
 function goversion {
     GOTEST=(`go version 2>/dev/null`) 

@@ -1,0 +1,260 @@
+#!/bin/sh
+read -d '' INFO << TEXT
+Filename:    goenv
+Version:     1.0.1 
+
+Purpose:     To manage your Go (golang) runtime version(s).
+
+Usage:       goenv [ 1.3.3 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
+
+Assumptions: 1) You have homebrew installed
+
+Notes:
+1) Run "goenv check" to verify that the $GOPATH and the current Go runtime version are equivalent.
+2) If you call "goenv init", it will create $HOME/.goenv that will have the current Go runtime version number.
+3) This script uses brew-versions to install old versions of go.
+4) There may be problems if you try to install versions 1.1.2 and below.
+5) After running "goenv setup", you need to open a new terminal window (or source the current one).
+6) No shims.  No rehashing.  Just plain shell commands and some brew.
+7) Author: Lex Sheehan
+
+Examples:
+  . goenv 1.3.3                        # To switch to version 1.3.3 (you can use any valid Go version)
+  . goenv 1.4                          # To switch to version 1.4
+  . goenv perisist                     # To persist your go version in the $HOME/.goenv file
+  . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
+  goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.
+  goenv info                           # To display goenv information
+  goenv help                           # To display goenv help information
+  goenv check                          # To verify that your go runtime environment is okay
+  goenv version                        # To get the current go runtime version
+  goenv version goenv                  # To get the current goenv version
+  goenv versions                       # To get a list of locally installed Go versions
+  goenv versions available             # To get a list of available Go versions
+  goenv install 1.3.3                  # To install version 1.3.3
+  goenv uninstall 1.3.3                # To uninstall version 1.3.3
+  
+Version History:
+1.0.0 - Initial release
+1.0.1 - Improve check logic and add colors
+TEXT
+
+USAGE=`echo "$INFO"|grep Usage`
+GOENV_VERSION=`echo "$INFO"|grep Version:`
+BREW_GO_ROOT=/usr/local/Cellar/go
+GOENV_VER_FILE=$HOME/.goenv/version
+GOOD_STATUS="√ All good."
+
+function goversion {
+    GOTEST=(`go version 2>/dev/null`) 
+    if [ "$?" != "0" ]; then
+        exit 1
+    fi
+    echo $(go version|cut -d" " -f3|while read n; do echo "${n:2}"; done)
+}
+
+function goversions {
+    echo "Installed Go versions:"
+    brew info go|grep Cellar|grep -v export
+}
+
+function usage {
+  echo $USAGE
+}
+
+function goenv_version {
+  echo $GOENV_VERSION|cut -d' ' -f2
+}
+
+function switchgo {
+    VER=$1
+    echo "Switching Go to version $VER ..."
+
+    GOVERSIONS=`brew info go|grep Cellar`
+
+    if [[ $GOVERSIONS != *"$VER"* ]]; then
+        echo "Requested version ($VER) does not exist locally...Attempting to install from archives..."
+
+        install $VER
+    fi
+
+    export GOROOT=$BREW_GO_ROOT/$VER/libexec
+    if [[ ! -d $GOROOT ]]; then
+        echo "ERROR:  $GOROOT is not a directory!"
+        exit 1
+    fi
+
+    NEW_GO_BIN=$GOROOT/bin/go
+    GO_BINARY=`which go`
+    if [[ -e $NEW_GO_BIN ]] && [[ -e $GO_BINARY ]]; then
+        brew link --overwrite go  &>/dev/null
+        brew switch go $VER &>/dev/null
+        echo $VER > "$GOENV_VER_FILE"
+    else
+        echo "ERROR:  $NEW_GO_BIN should exist and \$(which go) should be a link."
+    fi
+    GOBIN=$GOBIN
+    if [ "$GOBIN" == "" ]; then
+        if [ "$GOPATH" == "" ]; then
+            echo "Set GOPATH and try again (to set GOBIN)."
+        else
+            export GOBIN=$GOPATH/bin
+            echo "Exported GOBIN=$GOBIN"
+        fi
+    fi
+    
+}
+
+function install {
+    VER=$1
+    VER_GITCMD=$(brew versions go|grep "^$VER "|tail -n 1)
+    GITCMD=$(echo $VER_GITCMD|cut -d' ' -f2-5)
+    if [ -z "$GITCMD" ]; then
+        echo "The requrested Go version ($VER) was not found in the archives."
+        exit 1
+    fi
+
+    HOMEBREW_BASE=$( brew --prefix )
+    set -x
+    pushd $HOMEBREW_BASE
+    `$GITCMD`
+    { set +x; } &>/dev/null
+    if [ "$?" != "0" ];then
+        echo "Unable to install version ($VER)"
+        exit 1
+    else
+        set -x
+        brew unlink go
+        brew install go
+        { set +x; } &>/dev/null
+    fi
+    popd
+}
+
+function uninstall {
+    VER=$1
+    if [[ $BREW_GO_ROOT == *"Cellar"* ]] && [[ -d $BREW_GO_ROOT/$VER ]]; then
+        echo -n "Removing $BREW_GO_ROOT/$VER..."
+        rm -rf $BREW_GO_ROOT/$VER
+        echo "Done."
+    else
+        echo "$VER is not installed."
+    fi
+}
+
+function check {
+    tput setab 0
+    which go &>/dev/null
+    if [ "$?" != "0" ]; then
+        tput setaf 1
+        printf "ERROR:  Go command not found."
+    else
+        GOVER=$(goversion)
+        if [ "$?" != "0" ]; then
+            tput setaf 1
+            printf "ERROR:  Go command not found."
+        else
+            if [[ $GOROOT == *"$GOVER"* ]]; then
+                if [ "$GOPATH" == "" ]; then
+                    tput setaf 3
+                    printf "WARNING: \$GOPATH is not set." 
+                else
+                    if [[ ! -e "$GOPATH" ]]; then
+                        tput setaf 3
+                        printf "WARNING: \$GOPATH is not a valid directory." 
+                    else
+                        tput setaf 2
+                        printf $GOOD_STATUS;
+                    fi
+                fi
+             else
+                tput setaf 1
+                printf "ERROR: \$GOROOT != Go version"
+            fi              
+        fi
+    fi
+    tput sgr0   
+}
+
+if [ "$1" == "-?" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ]; then
+    echo "$INFO"
+
+elif [ "$1" == "init" ]; then
+    if [ -f $GOENV_VER_FILE ]; then
+        switchgo `cat $GOENV_VER_FILE`
+    fi
+
+elif [ "$1" == "persist" ]; then
+
+    VER=`goversion`
+    `cat $VER > $GOENV_VER_FILE`
+
+elif [ "$1" == "version" ]; then
+    if [ "$2" == "goenv" ] ; then
+      echo "`goenv_version`"
+    else
+      echo `goversion`
+    fi
+
+elif [ "$1" == "versions" ]; then
+    if [ "$2" == "available" ] ; then
+        brew versions go
+    else
+        echo "`goversions`"
+    fi
+
+elif [ "$1" == "upgrade" ]; then
+    brew upgrade go
+
+elif [ "$1" == "install" ]; then
+    install $2
+
+
+elif [ "$1" == "uninstall" ]; then
+    uninstall $2
+
+elif [ "$1" == "setup" ]; then
+    if [ ! -e goenv ]; then
+        echo "Copy the goenv script to a directory in your PATH and try again."
+        echo ""
+        echo "Here's a list of directories in you PATH:"
+        echo "$PATH"|tr ":" "\n"
+        echo ""
+        echo "Also, make goenv executable:  $ chmod +x goenv"
+        exit 1
+    fi
+    printf "\nif which goenv > /dev/null; then . goenv init; fi" >> $HOME/.bashrc
+
+
+elif [ "$1" == "check" ]; then
+    STATUS=`check`
+    echo "$STATUS"
+
+    if [ "$STATUS" == "$GOOD_STATUS" ]; then
+        exit 0
+     else
+        echo ""
+        echo "Go version: `goversion`"
+        echo "\$GOROOT   : $GOROOT"
+        echo ""
+        echo "Don't forget to source goenv when switching Go versions! (For more info run $ goenv info.)"
+        echo ""
+        exit 1
+    fi
+
+elif [ "$1" == "info" ]; then
+    echo "Current Go version: `goversion`"
+    echo "STATUS: `check`"
+    echo "GOROOT: $GOROOT"
+    echo "GOPATH: $GOPATH"
+    echo "GOBIN : $GOBIN"
+    echo "`goversions`"
+
+elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then
+    # Accepts versions of format:  Examples: 1.3.3, 1.4
+    switchgo $1
+
+else
+    usage
+
+fi

@@ -1,7 +1,7 @@
 #!/bin/sh
 read -d '' INFO << TEXT
 Filename:    goenv
-Version:     1.0.4
+Version:     1.0.5
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
@@ -39,6 +39,7 @@ USAGE=`echo "$INFO"|grep Usage`
 GOENV_VERSION=`echo "$INFO"|grep Version:`
 BREW_GO_ROOT=/usr/local/Cellar/go
 GOENV_VER_FILE=$HOME/.goenv/version
+LATEST_BREW_GO_VER_FILE=$HOME/.goenv/lastest-brew-go-version
 GOOD_STATUS="√ All good."
 TIP="Don't forget to source goenv when running goenv commands that change your Go version (For more info run $ goenv info)"
 
@@ -60,7 +61,10 @@ function usage {
 }
 
 function lastest_brew_go_version {
-    echo `goenv versions available|tail +1|head -n 1|cut -d' ' -f1`
+    if [ ! -s $LATEST_BREW_GO_VER_FILE ]; then
+        echo "`goenv versions available|tail +1|head -n 1|cut -d' ' -f1`" > $LATEST_BREW_GO_VER_FILE
+    fi
+    cat $LATEST_BREW_GO_VER_FILE
 }
 
 function switchtogo_version {
@@ -281,6 +285,8 @@ elif [ "$1" == "info" ]; then
     echo "GOOS  : $GOOS"
     echo "GOARCH: $GOARCH"
     echo "Current Go version: `goversion`"
+    echo "Latest Brew Go version: `lastest_brew_go_version`"
+    echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
     echo "switchtogo version: `switchtogo_version`"
     echo "switchtogo version file: $GOENV_VER_FILE"
     echo "`goversions`"

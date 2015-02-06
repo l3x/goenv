@@ -1,6 +1,7 @@
 #!/bin/sh
 read -d '' INFO << TEXT
 Filename:    goenv
+Version:     1.0.4
 
 Purpose:     To manage your Go (golang) runtime version(s).
 

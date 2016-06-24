@@ -285,10 +285,11 @@ elif [ "$1" == "info" ]; then
     echo "GOOS  : $GOOS"
     echo "GOARCH: $GOARCH"
     echo "Current Go version: `goversion`"
-    echo "Latest Brew Go version: `lastest_brew_go_version`"
     echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
-    echo "switchtogo version: `switchtogo_version`"
+    echo "Latest Brew Go version     : `lastest_brew_go_version`"
     echo "switchtogo version file: $GOENV_VER_FILE"
+    echo "switchtogo version     : `switchtogo_version`"
+    echo "goenv version: `goenv_version`"
     echo "`goversions`"
 
 elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then

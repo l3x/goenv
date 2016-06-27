@@ -88,7 +88,7 @@ function switchgo {
     VER=$1
     if [ "$VER" == "" ]; then
         echo "switchgo called without passing a go version to switch to."
-        exit 0
+        return
     fi
     echo "Switching Go to version $VER ..."
 
@@ -103,7 +103,7 @@ function switchgo {
     export GOROOT=$BREW_GO_ROOT/$VER/libexec
     if [[ ! -d $GOROOT ]]; then
         echo "ERROR:  $GOROOT is not a directory!"
-        exit 1
+        return
     fi
 
     NEW_GO_BIN=$GOROOT/bin/go
@@ -133,7 +133,7 @@ function install {
     GITCMD=$(echo $VER_GITCMD|cut -d' ' -f2-5)
     if [ -z "$GITCMD" ]; then
         echo "The requrested Go version ($VER) was not found in the archives."
-        exit 1
+        return
     fi
 
     HOMEBREW_BASE=$( brew --prefix )
@@ -141,7 +141,7 @@ function install {
     `$GITCMD`
     if [ "$?" != "0" ];then
         echo "Unable to install version ($VER)"
-        exit 1
+        return
     else
         set -x
         brew unlink go

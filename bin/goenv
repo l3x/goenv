@@ -56,6 +56,17 @@ function goversions {
     brew info go|grep Cellar|grep -v export
 }
 
+function current_go_path {
+   CURRENT_GO_VERSION=$1
+   RET=""
+   if [ -z $CURRENT_GO_VERSION ]; then
+      echo "No CURRENT_GO_VERSION!"
+   else
+      RET="$(goversions | grep 1.4.3 | cut -d ' ' -f 1)"
+   fi
+   echo "$RET"
+}
+
 function usage {
     echo $USAGE
 }
@@ -104,6 +115,8 @@ function switchgo {
     if [[ ! -d $GOROOT ]]; then
         echo "ERROR:  $GOROOT is not a directory!"
         return
+    else
+        export PATH=$GOROOT/bin:$PATH
     fi
 
     NEW_GO_BIN=$GOROOT/bin/go

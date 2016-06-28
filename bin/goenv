@@ -44,7 +44,7 @@ GOOD_STATUS="√ All good."
 TIP="Don't forget to source goenv when running goenv commands that change your Go version (For more info run $ goenv info)"
 
 function goversion {
-    GOTEST=(`go version 2>/dev/null`) 
+    GOTEST=(`go version 2>/dev/null`)
     if [ "$?" != "0" ]; then
         exit 1
     fi
@@ -137,7 +137,7 @@ function switchgo {
             echo "Exported GOBIN=$GOBIN"
         fi
     fi
-    
+
 }
 
 function install {
@@ -159,7 +159,7 @@ function install {
         set -x
         brew unlink go
         brew install go
-        { set +x; } &>/dev/null
+        { set +x; } 2>/dev/null
     fi
     set_goenv_version
     popd
@@ -191,11 +191,11 @@ function check {
             if [[ $GOROOT == *"$GOVER"* ]]; then
                 if [ "$GOPATH" == "" ]; then
                     tput setaf 3
-                    printf "WARNING: \$GOPATH is not set." 
+                    printf "WARNING: \$GOPATH is not set."
                 else
                     if [[ ! -e "$GOPATH" ]]; then
                         tput setaf 3
-                        printf "WARNING: \$GOPATH is not a valid directory." 
+                        printf "WARNING: \$GOPATH is not a valid directory."
                     else
                         tput setaf 2
                         printf $GOOD_STATUS;
@@ -204,10 +204,10 @@ function check {
              else
                 tput setaf 1
                 printf "ERROR: \$GOROOT != Go version"
-            fi              
+            fi
         fi
     fi
-    tput sgr0   
+    tput sgr0
 }
 
 if [ "$1" == "-?" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ]; then
@@ -215,7 +215,7 @@ if [ "$1" == "-?" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "he
 
 elif [ "$1" == "init" ]; then
     LATEST_BREW_GO_VER="$(lastest_brew_go_version)"
-    if ! which go > /dev/null && [ "$LATEST_BREW_GO_VER" != "" ]; then 
+    if ! which go > /dev/null && [ "$LATEST_BREW_GO_VER" != "" ]; then
         echo ""
         echo "Go is not currently installed but homebrew has a version.  Press Enter to install Go version $LATEST_BREW_GO_VER --or-- CTRL+C to Cancel."
         read x
@@ -223,7 +223,7 @@ elif [ "$1" == "init" ]; then
         echo "GOENV_VER_FILE: $GOENV_VER_FILE"
         echo "$LATEST_BREW_GO_VER" > $GOENV_VER_FILE
     fi
-    
+
     if [ -s $GOENV_VER_FILE ]; then
         switchgo `cat $GOENV_VER_FILE`
     fi
@@ -291,7 +291,7 @@ elif [ "$1" == "info" ]; then
     echo "STATUS: $status"
     if [[ ! "$status" == *"√"* ]]; then
         echo "TIP: $TIP"
-    fi    
+    fi
     echo "GOROOT: $GOROOT"
     echo "GOPATH: $GOPATH"
     echo "GOBIN : $GOBIN"
@@ -306,6 +306,10 @@ elif [ "$1" == "info" ]; then
     echo "`goversions`"
 
 elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then
+
+   # set -x
+   # trap read debug
+
     # Accepts versions of format:  Examples: 1.3.3, 1.4
     switchgo $1
 

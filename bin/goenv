@@ -5,7 +5,7 @@ Version:     1.1.0
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
-Usage:       goenv [ 1.4 | 1.5 | 1.6 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
+Usage:       goenv [ 1.4.3 | 1.5.4 | 1.6.2 | persist | init | setup | info | check | version [goenv] | versions [available] | install 1.4 | install 1.5 | install 1.6 | uninstall 1.4 | uninstall 1.5 | uninstall 1.6 ]
 
 Assumptions: 1) You have homebrew installed
 
@@ -13,15 +13,14 @@ Notes:
 1) Run "goenv check" to verify that the $GOPATH and the current Go runtime version are equivalent.
 2) If you call "goenv init", it will create $HOME/.goenv that will have the current Go runtime version number.
 3) This script uses brew-versions to install old versions of go.
-4) There may be problems if you try to install versions 1.1.2 and below.
-5) After running "goenv setup", you need to open a new terminal window (or source the current one).
-6) No shims.  No rehashing.  Just plain shell commands and some brew.
-7) Author: Lex Sheehan
+4) After running "goenv setup", you need to open a new terminal window (or source the current one).
+5) No shims.  No rehashing.  Just plain shell commands and some brew.
+6) Author: Lex Sheehan
 
 Examples:
-  . goenv 1.4                          # To switch to latest version of golang 1.4
-  . goenv 1.5                          # To switch to latest version of golang 1.5
-  . goenv 1.6                          # To switch to latest version of golang 1.6
+  . goenv 1.4.3                        # To switch to latest version of golang 1.4
+  . goenv 1.5.4                        # To switch to latest version of golang 1.5
+  . goenv 1.6.2                        # To switch to latest version of golang 1.6
   . goenv perisist                     # To persist your go version in the $HOME/.goenv file
   . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
   goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.

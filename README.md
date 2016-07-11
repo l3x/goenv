@@ -147,7 +147,7 @@ This will get you going with the latest version of goenv and make it easy to for
 $ git clone https://github.com/l3x/goenv.git ~/.goenv
 ~~~
 
-#### 2) Add `~/.goenv/bin` to your `$PATH`.  Add the following to your  ~/.bashrc file:
+#### 2) Add the following to your  ~/.bashrc file:
 ~~~
 export PATH="$PATH:$HOME/.goenv/bin"
 ~~~
@@ -184,7 +184,7 @@ $ chmod +x goenv
 ~~~
 
 
-#### 4) Find a verion of Go that you want to install:
+#### 4) Find a version of Go that you want to install:
 ~~~
 $ goenv versions available
 ~~~
@@ -274,7 +274,7 @@ Version:     1.1.0
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
-Usage:       goenv [ 1.4 | 1.5 | 1.6 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
+Usage:       goenv [ 1.4.3 | 1.5.4 | 1.6.2 | persist | init | setup | info | check | version [goenv] | versions [available] | install 1.4 | install 1.5 | install 1.6 | uninstall 1.4 | uninstall 1.5 | uninstall 1.6 ]
 
 Assumptions: 1) You have homebrew installed
 
@@ -288,9 +288,9 @@ Notes:
 7) Author: Lex Sheehan
 
 Examples:
-  . goenv 1.4                          # To switch to latest version of golang 1.4
-  . goenv 1.5                          # To switch to latest version of golang 1.5
-  . goenv 1.6                          # To switch to latest version of golang 1.6
+  . goenv 1.4.3                        # To switch to latest version of golang 1.4
+  . goenv 1.5.4                        # To switch to latest version of golang 1.5
+  . goenv 1.6.2                        # To switch to latest version of golang 1.6
   . goenv perisist                     # To persist your go version in the $HOME/.goenv file
   . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
   goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.

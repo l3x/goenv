@@ -281,11 +281,9 @@ Assumptions: 1) You have homebrew installed
 Notes:
 1) Run "goenv check" to verify that the $GOPATH and the current Go runtime version are equivalent.
 2) If you call "goenv init", it will create $HOME/.goenv that will have the current Go runtime version number.
-3) This script uses brew-versions to install old versions of go.
-4) There may be problems if you try to install versions 1.1.2 and below.
-5) After running "goenv setup", you need to open a new terminal window (or source the current one).
-6) No shims.  No rehashing.  Just plain shell commands and some brew.
-7) Author: Lex Sheehan
+3) After running "goenv setup", you need to open a new terminal window (or source the current one).
+4) No shims.  No rehashing.  Just plain shell commands and some brew.
+5) Author: Lex Sheehan
 
 Examples:
   . goenv 1.4.3                        # To switch to latest version of golang 1.4
@@ -299,7 +297,6 @@ Examples:
   goenv check                          # To verify that your go runtime environment is okay
   goenv version                        # To get the current go runtime version
   goenv version goenv                  # To get the current goenv version
-  goenv versions                       # To get a list of locally installed Go versions
   goenv versions available             # To get a list of available Go versions
   goenv install 1.4                    # To install latest version of golang 1.4
   goenv uninstall 1.4                  # To uninstall latest version of golang 1.4
@@ -312,8 +309,9 @@ Examples:
 ### Version History
 
 ```
+**1.0.1** (July 11, 2016)
+**1.1.0** (July 11, 2016)
 **1.0.0** (January 13, 2015)
-**1.1.0** (July 11, 2015)
 ```
 
 * Initial public release.

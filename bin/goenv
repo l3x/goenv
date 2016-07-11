@@ -1,11 +1,11 @@
 #!/bin/sh
 read -d '' INFO << TEXT
 Filename:    goenv
-Version:     1.0.5
+Version:     1.1.0
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
-Usage:       goenv [ 1.3.3 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
+Usage:       goenv [ 1.4 | 1.5 | 1.6 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
 
 Assumptions: 1) You have homebrew installed
 
@@ -19,8 +19,9 @@ Notes:
 7) Author: Lex Sheehan
 
 Examples:
-  . goenv 1.3.3                        # To switch to version 1.3.3 (you can use any valid Go version)
-  . goenv 1.4                          # To switch to version 1.4
+  . goenv 1.4                          # To switch to latest version of golang 1.4
+  . goenv 1.5                          # To switch to latest version of golang 1.5
+  . goenv 1.6                          # To switch to latest version of golang 1.6
   . goenv perisist                     # To persist your go version in the $HOME/.goenv file
   . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
   goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.
@@ -31,8 +32,12 @@ Examples:
   goenv version goenv                  # To get the current goenv version
   goenv versions                       # To get a list of locally installed Go versions
   goenv versions available             # To get a list of available Go versions
-  goenv install 1.3.3                  # To install version 1.3.3
-  goenv uninstall 1.3.3                # To uninstall version 1.3.3
+  goenv install 1.4                    # To install latest version of golang 1.4
+  goenv uninstall 1.4                  # To uninstall latest version of golang 1.4
+  goenv install 1.5                    # To install latest version of golang 1.5
+  goenv uninstall 1.5                  # To uninstall latest version of golang 1.5
+  goenv install 1.6                    # To install latest version of golang 1.6
+  goenv uninstall 1.6                  # To uninstall latest version of golang 1.6
 TEXT
 
 USAGE=`echo "$INFO"|grep Usage`
@@ -140,29 +145,34 @@ function switchgo {
 
 }
 
+# TODO: automate
 function install {
     VER=$1
-    VER_GITCMD=$(brew versions go|grep "^$VER "|tail -n 1)
-    GITCMD=$(echo $VER_GITCMD|cut -d' ' -f2-5)
-    if [ -z "$GITCMD" ]; then
-        echo "The requrested Go version ($VER) was not found in the archives."
-        return
-    fi
-
     HOMEBREW_BASE=$( brew --prefix )
-    pushd $HOMEBREW_BASE
-    `$GITCMD`
-    if [ "$?" != "0" ];then
-        echo "Unable to install version ($VER)"
-        return
+    if [ "$VER" == "1.4" ]; then
+      brew install go14
+      if [ "$?" != "0" ]; then
+         echo "Unable to install version ($VER)"
+      else
+         ln -s /usr/local/Cellar/go14/1.4.3 /usr/local/Cellar/go/1.4.3
+      fi
+    elif [ "$VER" == "1.5" ]; then
+      brew install go15
+      if [ "$?" != "0" ]; then
+         echo "Unable to install version ($VER)"
+      else
+         ln -s /usr/local/Cellar/go15/1.5.4 /usr/local/Cellar/go/1.5.4
+      fi       
+    elif [ "$VER" == "1.6" ]; then
+      brew install go
+      if [ "$?" != "0" ]; then
+         echo "Unable to install version ($VER)"
+      fi       
     else
-        set -x
-        brew unlink go
-        brew install go
-        { set +x; } 2>/dev/null
+        echo "The requrested Go version ($VER) is not valid."
+        return
     fi
-    set_goenv_version
-    popd
+    # set_goenv_version
 }
 
 function uninstall {
@@ -173,6 +183,30 @@ function uninstall {
         echo "Done."
     else
         echo "$VER is not installed."
+    fi
+    
+    if [ "$VER" == "1.4" ]; then
+      brew uninstall go14
+      if [ "$?" != "0" ]; then
+         echo "Unable to uninstall version ($VER)"
+      else
+         rm /usr/local/Cellar/go/1.4.3
+      fi
+    elif [ "$VER" == "1.5" ]; then
+      brew uninstall go15
+      if [ "$?" != "0" ]; then
+         echo "Unable to install version ($VER)"
+      else
+         rm /usr/local/Cellar/go/1.5.4
+      fi       
+    elif [ "$VER" == "1.6" ]; then
+      brew uninstall go
+      if [ "$?" != "0" ]; then
+         echo "Unable to install version ($VER)"
+      fi       
+    else
+        echo "The requrested Go version ($VER) is not valid."
+        return
     fi
 }
 

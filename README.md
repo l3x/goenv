@@ -11,8 +11,13 @@ It's as light-weight and unobtrusive as it gets.
 
 You can install, and later upgrade goenv using git.
 
+Note:  goenv (version 1.1.0) currently supports golang 1.4, 1.5, and 1.6
+
+
 ## Table of Contents
 
+* [Info Example](#info-example)
+* [Why Use goenv](#why-use-goenv)
 * [How It Works](#how-it-works)
 * [Understanding PATH](#understanding-path)
 * [Choosing the Go Version](#choosing-the-go-version)
@@ -26,6 +31,27 @@ You can install, and later upgrade goenv using git.
 * [Command Reference](#command-reference)
 * [Version History](#version-history)
 * [License](#license)
+
+
+## Info Example
+
+This is the what you might see when you ask for info:
+
+<img align="right" src="https://github.com/l3x/goenv/blob/master/goenv-info.png">
+
+
+## Why Use goenv
+
+If you develop on a mac, you should be using homebrew to manage your OSX apps.
+
+IMHO - Golang should be yet another homebrew managed OSX app.
+
+So, if you have to support golang projects that depend on different go versions
+then goenv will help you by making installing golang, switching versions and
+managing your go versions within the confines of homebrew.
+
+If you always only ever run the latest version of go, then you might consider
+not using goenv and opt to follow these instructions: https://golang.org/doc/install
 
 ## How It Works
 
@@ -73,8 +99,8 @@ Execute goenv < version.number > to switch to a different Go version
 
 Examples:
 ```
-. goenv 1.3.3                        # To switch to version 1.3.3 (you can use any valid Go version)
-. goenv 1.4                          # To switch to version 1.4
+. goenv 1.4                        # To switch to latest version of golang 1.4
+. goenv 1.5                        # To switch to latest version of golang 1.5
 ```
 
 ### Locating the Go Installation
@@ -83,20 +109,29 @@ Once goenv has determined which version of Go your application has
 specified, it passes the command along to the corresponding Homebrew
 install command.
 
-Each Go version is installed into its own directory under
+Previously, each Go version is installed into its own directory under
 `/usr/local/Cellar/go`. For example, you might have these versions
 installed:
 
-* `/usr/local/Cellar/go/1.3.3 (4344 files, 114M) *`
-* `/usr/local/Cellar/go/1.4 (4557 files, 134M)`
+Installed Go versions:
+
+```
+/usr/local/Cellar/go/1.4.3 (28B)
+/usr/local/Cellar/go/1.5.4 (28B) *
+/usr/local/Cellar/go/1.6.2 (5,778 files, 325.3M)
+```
 
 Note that the "*" at the end of the line indicates the current Go runtime.
 
+However, things have changed and legacy golang versions have their own brew.
+
+Now, legacy golang versions have their own Cellar install path and a soft
+link will be created in the /usr/local/Cellar/go directory.
 
 ## Installation
 
-**Compatibility note**: goenv is not _incompatible_ anything\*\*\*.  You can install
-goenv without concern regarding "conflicting software".
+**Compatibility note**: genv is non-invasive and has no adverse side-effects.
+You can install goenv without concern regarding "conflicting software".
 
 \*\*\* goenv assumes you are using a mac (OSX) and have
 [Homebrew](#homebrew-on-mac-os-x) installed.
@@ -121,7 +156,7 @@ $ echo ';export PATH="$HOME/.goenv/bin:$PATH"; if which goenv > /dev/null; then 
 (Opening a new terminal tab will usually do it.) Now check if goenv was set up:
 ~~~
 $ goenv version goenv
-1.0.0
+1.1.0
 ~~~
 
 
@@ -158,7 +193,7 @@ $ goenv versions available
 #### 5) Install Go:
 For example, we can choose to install version 1.4...
 ~~~
-$ goenv 1.4
+$ goenv install 1.4
 ~~~
 
 
@@ -216,9 +251,9 @@ You already know how to do this.  See steps #4 and #5 above.
 As time goes on, Go versions you install will accumulate in your
 `/usr/local/Cellar/go/` directory.
 
-To remove old Go versions, run `$ goenv uninstall 1.3.3`
+To remove old Go versions, run `$ goenv uninstall 1.4`
 
-... where 1.3.3 is the version of Go that you want to uninstall.
+... where 1.4 is the version of Go that you want to uninstall.
 
 To see the versions of Go you have installed run `$ goenv versions`
 
@@ -235,11 +270,11 @@ To verify that your Go runtime environment is okay run `$ goenv check`
 
 ~~~
 Filename:    goenv
-Version:     1.0.0
+Version:     1.1.0
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
-Usage:       goenv [ 1.3.3 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
+Usage:       goenv [ 1.4 | 1.5 | 1.6 | persist | init | setup | info | check | version [goenv] | versions [available] | install | uninstall ]
 
 Assumptions: 1) You have homebrew installed
 
@@ -253,25 +288,31 @@ Notes:
 7) Author: Lex Sheehan
 
 Examples:
-. goenv 1.3.3                        # To switch to version 1.3.3 (you can use any valid Go version)
-. goenv 1.4                          # To switch to version 1.4
-. goenv perisist                     # To persist your go version in the $HOME/.goenv file
-. goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
-goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.
-goenv info                           # To display goenv information
-goenv help                           # To display goenv help information
-goenv check                          # To verify that your go runtime environment is okay
-goenv version                        # To get the current go runtime version
-goenv version goenv                  # To get the current goenv version
-goenv versions                       # To get a list of locally installed Go versions
-goenv versions available             # To get a list of available Go versions
-goenv install 1.3.3                  # To install version 1.3.3
-goenv uninstall 1.3.3                # To uninstall version 1.3.3
+  . goenv 1.4                          # To switch to latest version of golang 1.4
+  . goenv 1.5                          # To switch to latest version of golang 1.5
+  . goenv 1.6                          # To switch to latest version of golang 1.6
+  . goenv perisist                     # To persist your go version in the $HOME/.goenv file
+  . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
+  goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.
+  goenv info                           # To display goenv information
+  goenv help                           # To display goenv help information
+  goenv check                          # To verify that your go runtime environment is okay
+  goenv version                        # To get the current go runtime version
+  goenv version goenv                  # To get the current goenv version
+  goenv versions                       # To get a list of locally installed Go versions
+  goenv versions available             # To get a list of available Go versions
+  goenv install 1.4                    # To install latest version of golang 1.4
+  goenv uninstall 1.4                  # To uninstall latest version of golang 1.4
+  goenv install 1.5                    # To install latest version of golang 1.5
+  goenv uninstall 1.5                  # To uninstall latest version of golang 1.5
+  goenv install 1.6                    # To install latest version of golang 1.6
+  goenv uninstall 1.6                  # To uninstall latest version of golang 1.6
 ~~~
 
 ### Version History
 
 **1.0.0** (January 13, 2015)
+**1.1.0** (July 11, 2015)
 
 * Initial public release.
 
@@ -279,7 +320,7 @@ goenv uninstall 1.3.3                # To uninstall version 1.3.3
 
 (The MIT license)
 
-Copyright (c) 2015 Lex Sheehan
+Copyright (c) 2015, 2016 Lex Sheehan
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

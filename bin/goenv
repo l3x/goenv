@@ -162,12 +162,12 @@ function install {
          echo "Unable to install version ($VER)"
       else
          ln -s /usr/local/Cellar/go15/1.5.4 /usr/local/Cellar/go/1.5.4
-      fi       
+      fi
     elif [ "$VER" == "1.6" ]; then
       brew install go
       if [ "$?" != "0" ]; then
          echo "Unable to install version ($VER)"
-      fi       
+      fi
     else
         echo "The requrested Go version ($VER) is not valid."
         return
@@ -184,7 +184,7 @@ function uninstall {
     else
         echo "$VER is not installed."
     fi
-    
+
     if [ "$VER" == "1.4" ]; then
       brew uninstall go14
       if [ "$?" != "0" ]; then
@@ -198,12 +198,12 @@ function uninstall {
          echo "Unable to install version ($VER)"
       else
          rm /usr/local/Cellar/go/1.5.4
-      fi       
+      fi
     elif [ "$VER" == "1.6" ]; then
       brew uninstall go
       if [ "$?" != "0" ]; then
          echo "Unable to install version ($VER)"
-      fi       
+      fi
     else
         echo "The requrested Go version ($VER) is not valid."
         return

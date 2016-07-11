@@ -311,8 +311,10 @@ Examples:
 
 ### Version History
 
+```
 **1.0.0** (January 13, 2015)
 **1.1.0** (July 11, 2015)
+```
 
 * Initial public release.
 

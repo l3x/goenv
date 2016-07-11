@@ -11,7 +11,7 @@ It's as light-weight and unobtrusive as it gets.
 
 You can install, and later upgrade goenv using git.
 
-Note:  goenv (version 1.1.0) currently supports golang 1.4, 1.5, and 1.6
+Note:  goenv (version 1.1.1) currently supports golang 1.4, 1.5, and 1.6
 
 
 ## Table of Contents
@@ -156,7 +156,7 @@ export PATH="$PATH:$HOME/.goenv/bin"
 (Opening a new terminal tab will usually do it.) Now check if goenv was set up:
 ~~~
 $ goenv version goenv
-1.1.0
+1.1.1
 ~~~
 
 
@@ -270,7 +270,7 @@ To verify that your Go runtime environment is okay run `$ goenv check`
 
 ~~~
 Filename:    goenv
-Version:     1.1.0
+Version:     1.1.1
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
@@ -309,7 +309,7 @@ Examples:
 ### Version History
 
 ```
-**1.0.1** (July 11, 2016)
+**1.1.1** (July 11, 2016)
 **1.1.0** (July 11, 2016)
 **1.0.0** (January 13, 2015)
 ```

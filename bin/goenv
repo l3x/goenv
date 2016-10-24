@@ -164,6 +164,13 @@ function install {
       brew install go
       if [ "$?" != "0" ]; then
          echo "Unable to install version ($VER)"
+      else
+         ln -s /usr/local/Cellar/go16/1.6.2 /usr/local/Cellar/go/1.6.2
+      fi
+    elif [ "$VER" == "1.7" ]; then
+      brew install go
+      if [ "$?" != "0" ]; then
+         echo "Unable to install version ($VER)"
       fi
     else
         echo "The requrested Go version ($VER) is not valid."

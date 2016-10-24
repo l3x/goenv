@@ -161,14 +161,15 @@ function install {
          ln -s /usr/local/Cellar/go15/1.5.4 /usr/local/Cellar/go/1.5.4
       fi
     elif [ "$VER" == "1.6" ]; then
-      brew install go
+      brew install go16
       if [ "$?" != "0" ]; then
          echo "Unable to install version ($VER)"
       else
          ln -s /usr/local/Cellar/go16/1.6.2 /usr/local/Cellar/go/1.6.2
       fi
     elif [ "$VER" == "1.7" ]; then
-      brew install go
+      # brew install go
+      brew upgrade go
       if [ "$?" != "0" ]; then
          echo "Unable to install version ($VER)"
       fi

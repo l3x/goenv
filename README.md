@@ -306,6 +306,40 @@ Examples:
   goenv uninstall 1.6                  # To uninstall latest version of golang 1.6
 ~~~
 
+### How To Install Latest Version of Go on Your Mac
+
+This shows that your current $GOROOT is pointing to an old version of Go that is no longer installed on your mac:
+
+```
+$ goenv info
+STATUS: ERROR:  Go command not found.
+TIP: Don't forget to source goenv when running goenv commands that change your Go version (For more info run $ goenv info)
+GOROOT: /usr/local/Cellar/go/1.6.2/libexec
+GOPATH: /Users/lex/dev/go
+GOBIN : /Users/lex/dev/go/bin
+GOOS  : darwin
+GOARCH: amd64
+Current Go version:
+Latest Brew Go version file: /Users/lex/.goenv/lastest-brew-go-version
+Latest Brew Go version     :
+switchtogo version file: /Users/lex/.goenv/version
+switchtogo version     : 1.7.3
+goenv version: 1.1.1
+Installed Go versions:
+/usr/local/Cellar/go/1.7.3 (6,438 files, 250.6M) *
+```
+
+Run this to install the latest version of Go (version 1.7.4_2 currently)
+```
+$ brew upgrade go
+```
+
+Now, you've got the latest version of Go installed (and the install is managed by homebrew).
+
+<img align="right" src="https://github.com/l3x/goenv/blob/master/latest-go-ver-174.png">
+
+
+
 ### Version History
 
 ```

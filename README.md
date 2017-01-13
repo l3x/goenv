@@ -336,8 +336,7 @@ $ brew upgrade go
 
 Now, you've got the latest version of Go installed (and the install is managed by homebrew).
 
-<img align="right" src="https://github.com/l3x/goenv/blob/master/latest-go-ver-174.png">
-
+<img src="https://github.com/l3x/goenv/blob/master/latest-go-ver-174.png">
 
 
 ### Version History

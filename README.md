@@ -259,6 +259,42 @@ To see the versions of Go you have installed run `$ goenv versions`
 
 To verify that your Go runtime environment is okay run `$ goenv check`
 
+## Global GOPATH v. Project GOPATH
+
+### Global GOPATH
+
+Most sources only discuss GOPATH in terms of a global path.
+
+If this is what you choose, then it's a good idea to put the following in a startup file, e.g., ~/.bashrc
+
+```
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOPATH/bin
+```
+
+Most sources also suggest we use `go get` to grab the latest version of packages.
+
+#### Download package
+
+```
+go get -d github.com/dancannon/gorethink
+```
+
+#### Download and update package references
+
+```
+go get -u github.com/dancannon/gorethink
+```
+
+### Project GOPATH
+
+If you choose to use per-project settings then you'll likely want to use something like Glide.
+
+To make things easier, I created an init script that creates some frequently used aliases.
+
+For details on how this works, see the appendix in my book [Learning Functional Programming in Go](amazon.com/Learning-Functional-Programming-Lex-Sheehan-ebook/dp/B0725B8MYW)
+
+Using the "Dot Init" method, we can have per-project GOPATH and modern per-project dependency management.
 
 ## References
 * [The Go Programming Language](https://golang.org/)

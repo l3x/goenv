@@ -299,15 +299,6 @@ elif [ "$1" == "uninstall" ]; then
     uninstall $2
 
 elif [ "$1" == "setup" ]; then
-    if [ ! -e goenv ]; then
-        echo "Copy the goenv script to a directory in your PATH and try again."
-        echo ""
-        echo "Here's a list of directories in you PATH:"
-        echo "$PATH"|tr ":" "\n"
-        echo ""
-        echo "Also, make goenv executable:  $ chmod +x goenv"
-        exit 1
-    fi
     printf "\nif which goenv > /dev/null; then . goenv init; fi" >> $HOME/.bashrc
 
 

@@ -5,7 +5,7 @@ Version:     1.1.2
 
 Purpose:     To manage your Go (golang) runtime version(s).
 
-Usage:       goenv [ 1.4.3 | 1.5.4 | 1.6.2 | persist | init | setup | info | check | version [goenv] | versions [available] | install 1.4 | install 1.5 | install 1.6 | uninstall 1.4 | uninstall 1.5 | uninstall 1.6 ]
+Usage:       goenv [ 1.4.3 | 1.5.4 | 1.6.2 | persist | init | setup | info | check | version [goenv] | versions [available] | install 1.4 | install 1.5 | install 1.6 | uninstall 1.4 | uninstall 1.5 | uninstall 1.6 ] [-v | --verbose]
 
 Assumptions: 1) You have homebrew installed
 
@@ -38,7 +38,16 @@ Examples:
 TEXT
 
 USAGE=`echo "$INFO"|grep Usage`
-GOENV_VERSION=`echo "$INFO"|grep Version:`
+
+if [ ! -z $2 ]; then
+   if [ "$2" == "-v" ] || [ "$2" == "--verbose" ]; then
+      DISPLAY_GOVERSIONS=true
+   else
+      echo "Invalid parameter: $2"
+      echo "Continuing... and will display goversions (which -v will suppress)."
+   fi
+fi
+GOENV_VERSION=$(echo "$INFO"|grep Version:)
 BREW_GO_ROOT=/usr/local/Cellar/go
 GOENV_VER_FILE=$HOME/.goenv/version
 GOOD_STATUS="√ All good."
@@ -53,8 +62,10 @@ function goversion {
 }
 
 function goversions {
-    echo "Installed Go versions:"
-    brew info go|grep Cellar|grep -v export
+    if [ ! -z $DISPLAY_GOVERSIONS ]; then
+        echo "Installed Go versions:"
+        brew info go|grep Cellar|grep -v export
+    fi
 }
 
 function current_go_path {
@@ -74,7 +85,7 @@ function usage {
 
 function lastest_brew_go_version {
     if [ ! -s $LATEST_BREW_GO_VER_FILE ]; then
-        echo "`goenv versions available|tail +1|head -n 1|cut -d' ' -f1`" > $LATEST_BREW_GO_VER_FILE
+        echo "$(goenv versions available|tail +1|head -n 1|cut -d' ' -f1)" > $LATEST_BREW_GO_VER_FILE
     fi
     cat $LATEST_BREW_GO_VER_FILE
 }
@@ -104,7 +115,7 @@ function switchgo {
     fi
     echo "Switching Go to version $VER ..."
 
-    GOVERSIONS=`brew info go|grep Cellar`
+    GOVERSIONS=$(brew info go|grep Cellar)
 
     if [[ $GOVERSIONS != *"$VER"* ]]; then
         echo "Requested version ($VER) does not exist locally...Attempting to install from archives..."
@@ -270,19 +281,19 @@ elif [ "$1" == "init" ]; then
     fi
 
     if [ -s $GOENV_VER_FILE ]; then
-        switchgo `cat $GOENV_VER_FILE`
+        switchgo $(cat $GOENV_VER_FILE)
     fi
 
 elif [ "$1" == "persist" ]; then
 
-    VER=`goversion`
+    VER=$(goversion)
     `cat $VER > $GOENV_VER_FILE`
 
 elif [ "$1" == "version" ]; then
     if [ "$2" == "goenv" ] ; then
-      echo "`goenv_version`"
+      echo "$(goenv_version)"
     else
-      echo `goversion`
+      echo $(goversion)
     fi
 
 elif [ "$1" == "versions" ]; then
@@ -292,7 +303,7 @@ elif [ "$1" == "versions" ]; then
     if [ "$2" == "available" ] ; then
         brew versions go
     else
-        echo "`goversions`"
+        echo "$(goversions)"
     fi
 
 elif [ "$1" == "upgrade" ]; then
@@ -310,14 +321,14 @@ elif [ "$1" == "setup" ]; then
 
 
 elif [ "$1" == "check" ]; then
-    STATUS=`check`
+    STATUS=$(check)
     echo "$STATUS"
 
     if [ "$STATUS" == "$GOOD_STATUS" ]; then
         exit 0
      else
         echo ""
-        echo "Go version: `goversion`"
+        echo "Go version: $(goversion)"
         echo "\$GOROOT   : $GOROOT"
         echo ""
         echo "$TIP"
@@ -337,12 +348,12 @@ elif [ "$1" == "info" ]; then
     echo "GOBIN : $GOBIN"
     echo "GOOS  : $GOOS"
     echo "GOARCH: $GOARCH"
-    echo "Current Go version: `goversion`"
+    echo "Current Go version: $(goversion)"
     echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
     echo "switchtogo version file: $GOENV_VER_FILE"
-    echo "switchtogo version: `switchtogo_version`"
-    echo "goenv version: `goenv_version`"
-    echo "`goversions`"
+    echo "switchtogo version: $(switchtogo_version)"
+    echo "goenv version: $(goenv_version)"
+    echo "$(goversions)"
 
 elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then
 

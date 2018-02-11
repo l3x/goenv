@@ -42,7 +42,7 @@ USAGE=`echo "$INFO"|grep Usage`
 
 if [ ! -z $2 ]; then
     if [ "$2" == "-v" ] || [ "$2" == "--verbose" ]; then
-        DISPLAY_GOVERSIONS=true
+        VERBOSE=true
     else
         echo "Invalid parameter: $2"
         echo "Continuing... and will display goversions (which -v will suppress)."
@@ -63,7 +63,7 @@ function goversion {
 }
 
 function goversions {
-    if [ ! -z $DISPLAY_GOVERSIONS ]; then
+    if [ ! -z $VERBOSE ]; then
         echo "Installed Go versions:"
         brew info go|grep Cellar|grep -v export
     fi
@@ -358,12 +358,14 @@ elif [ "$1" == "info" ]; then
     echo "GOBIN : $GOBIN"
     echo "GOOS  : $GOOS"
     echo "GOARCH: $GOARCH"
-    echo "Current Go version: $(goversion)"
-    echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
-    echo "switchtogo version file: $GOENV_VER_FILE"
-    echo "switchtogo version: $(switchtogo_version)"
-    echo "goenv version: $(goenv_version)"
-    echo "$(goversions)"
+    if [ ! -z $VERBOSE ]; then
+       echo "Current Go version: $(goversion)"
+       echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
+       echo "switchtogo version file: $GOENV_VER_FILE"
+       echo "switchtogo version: $(switchtogo_version)"
+       echo "goenv version: $(goenv_version)"
+       echo "$(goversions)"
+    fi
 
 elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then
     # set -x

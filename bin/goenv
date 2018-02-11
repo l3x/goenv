@@ -21,7 +21,7 @@ Examples:
   . goenv 1.4.3                        # To switch to latest version of golang 1.4
   . goenv 1.5.4                        # To switch to latest version of golang 1.5
   . goenv 1.6.2                        # To switch to latest version of golang 1.6
-  . goenv perisist                     # To persist your go version in the $HOME/.goenv file
+  . goenv persist                      # To persist your go version in the $HOME/.goenv file
   . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
   goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.
   goenv info                           # To display goenv information

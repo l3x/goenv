@@ -81,7 +81,7 @@ function lastest_brew_go_version {
 
 function switchtogo_version {
     if [ -s $GOENV_VER_FILE ]; then
-        echo `cat $GOENV_VER_FILE`
+        echo $(cat $GOENV_VER_FILE)
     else
         echo ""
     fi
@@ -92,13 +92,13 @@ function goenv_version {
 }
 
 function set_goenv_version {
-    echo `goenv_version` > $GOENV_VER_FILE
+    echo $(goenv_version) > $GOENV_VER_FILE
 }
 
 
 function switchgo {
     VER=$1
-    if [ "$VER" == "" ]; then
+    if [ -z $VER ]; then
         echo "switchgo called without passing a go version to switch to."
         return
     fi
@@ -121,7 +121,7 @@ function switchgo {
     fi
 
     NEW_GO_BIN=$GOROOT/bin/go
-    GO_BINARY=`which go`
+    GO_BINARY=$(which go)
     if [[ -e $NEW_GO_BIN ]] && [[ -e $GO_BINARY ]]; then
         brew link --overwrite go  &>/dev/null
         brew switch go $VER &>/dev/null
@@ -222,9 +222,16 @@ function check {
         printf "ERROR:  Go command not found."
     else
         GOVER=$(goversion)
+        echo $PATH | grep "$GOBIN" &>/dev/null
+        if [ "$?" == "1" ]; then
+           IS_GOBIN_IN_PATH="yes"
+        fi
         if [ "$?" != "0" ]; then
             tput setaf 1
             printf "ERROR:  Go command not found."
+        elif [ "IS_GOBIN_IN_PATH" != "yes" ]; then
+            tput setaf 1
+            printf "ERROR:  GOBIN is not in the PATH environment variable."           
         else
             if [[ $GOROOT == *"$GOVER"* ]]; then
                 if [ "$GOPATH" == "" ]; then
@@ -324,6 +331,7 @@ elif [ "$1" == "info" ]; then
     if [[ ! "$status" == *"√"* ]]; then
         echo "TIP: $TIP"
     fi
+
     echo "GOROOT: $GOROOT"
     echo "GOPATH: $GOPATH"
     echo "GOBIN : $GOBIN"

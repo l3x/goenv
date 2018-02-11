@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #!/bin/sh
 read -d '' INFO << TEXT
 Filename:    goenv
@@ -40,12 +41,12 @@ TEXT
 USAGE=`echo "$INFO"|grep Usage`
 
 if [ ! -z $2 ]; then
-   if [ "$2" == "-v" ] || [ "$2" == "--verbose" ]; then
-      DISPLAY_GOVERSIONS=true
-   else
-      echo "Invalid parameter: $2"
-      echo "Continuing... and will display goversions (which -v will suppress)."
-   fi
+    if [ "$2" == "-v" ] || [ "$2" == "--verbose" ]; then
+        DISPLAY_GOVERSIONS=true
+    else
+        echo "Invalid parameter: $2"
+        echo "Continuing... and will display goversions (which -v will suppress)."
+    fi
 fi
 GOENV_VERSION=$(echo "$INFO"|grep Version:)
 BREW_GO_ROOT=/usr/local/Cellar/go
@@ -69,14 +70,14 @@ function goversions {
 }
 
 function current_go_path {
-   CURRENT_GO_VERSION=$1
-   RET=""
-   if [ -z $CURRENT_GO_VERSION ]; then
-      echo "No CURRENT_GO_VERSION!"
-   else
-      RET="$(goversions | grep 1.4.3 | cut -d ' ' -f 1)"
-   fi
-   echo "$RET"
+    CURRENT_GO_VERSION=$1
+    RET=""
+    if [ -z $CURRENT_GO_VERSION ]; then
+        echo "No CURRENT_GO_VERSION!"
+    else
+        RET="$(goversions | grep 1.4.3 | cut -d ' ' -f 1)"
+    fi
+    echo "$RET"
 }
 
 function usage {
@@ -157,32 +158,32 @@ function install {
     VER=$1
     HOMEBREW_BASE=$( brew --prefix )
     if [ "$VER" == "1.4" ]; then
-      brew install go14
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         ln -s /usr/local/Cellar/go14/1.4.3 /usr/local/Cellar/go/1.4.3
-      fi
-    elif [ "$VER" == "1.5" ]; then
-      brew install go15
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         ln -s /usr/local/Cellar/go15/1.5.4 /usr/local/Cellar/go/1.5.4
-      fi
-    elif [ "$VER" == "1.6" ]; then
-      brew install go16
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         ln -s /usr/local/Cellar/go16/1.6.2 /usr/local/Cellar/go/1.6.2
-      fi
-    elif [ "$VER" == "1.7" ]; then
-      # brew install go
-      brew upgrade go
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      fi
+        brew install go14
+        if [ "$?" != "0" ]; then
+            echo "Unable to install version ($VER)"
+        else
+            ln -s /usr/local/Cellar/go14/1.4.3 /usr/local/Cellar/go/1.4.3
+        fi
+        elif [ "$VER" == "1.5" ]; then
+        brew install go15
+        if [ "$?" != "0" ]; then
+            echo "Unable to install version ($VER)"
+        else
+            ln -s /usr/local/Cellar/go15/1.5.4 /usr/local/Cellar/go/1.5.4
+        fi
+        elif [ "$VER" == "1.6" ]; then
+        brew install go16
+        if [ "$?" != "0" ]; then
+            echo "Unable to install version ($VER)"
+        else
+            ln -s /usr/local/Cellar/go16/1.6.2 /usr/local/Cellar/go/1.6.2
+        fi
+        elif [ "$VER" == "1.7" ]; then
+        # brew install go
+        brew upgrade go
+        if [ "$?" != "0" ]; then
+            echo "Unable to install version ($VER)"
+        fi
     else
         echo "The requrested Go version ($VER) is not valid."
         return
@@ -201,24 +202,24 @@ function uninstall {
     fi
 
     if [ "$VER" == "1.4" ]; then
-      brew uninstall go14
-      if [ "$?" != "0" ]; then
-         echo "Unable to uninstall version ($VER)"
-      else
-         rm /usr/local/Cellar/go/1.4.3
-      fi
-    elif [ "$VER" == "1.5" ]; then
-      brew uninstall go15
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         rm /usr/local/Cellar/go/1.5.4
-      fi
-    elif [ "$VER" == "1.6" ]; then
-      brew uninstall go
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      fi
+        brew uninstall go14
+        if [ "$?" != "0" ]; then
+            echo "Unable to uninstall version ($VER)"
+        else
+            rm /usr/local/Cellar/go/1.4.3
+        fi
+        elif [ "$VER" == "1.5" ]; then
+        brew uninstall go15
+        if [ "$?" != "0" ]; then
+            echo "Unable to install version ($VER)"
+        else
+            rm /usr/local/Cellar/go/1.5.4
+        fi
+        elif [ "$VER" == "1.6" ]; then
+        brew uninstall go
+        if [ "$?" != "0" ]; then
+            echo "Unable to install version ($VER)"
+        fi
     else
         echo "The requrested Go version ($VER) is not valid."
         return
@@ -234,30 +235,39 @@ function check {
     else
         GOVER=$(goversion)
         echo $PATH | grep "$GOBIN" &>/dev/null
-        if [ "$?" == "1" ]; then
-           IS_GOBIN_IN_PATH="yes"
+        if [ "$?" == "0" ]; then
+            IS_GOBIN_IN_PATH="yes"
+        else
+            IS_GOBIN_IN_PATH="no"
         fi
         if [ "$?" != "0" ]; then
             tput setaf 1
             printf "ERROR:  Go command not found."
-        elif [ "IS_GOBIN_IN_PATH" != "yes" ]; then
+            elif [ "$IS_GOBIN_IN_PATH" == "no" ]; then
             tput setaf 1
-            printf "ERROR:  GOBIN is not in the PATH environment variable."           
+            printf "ERROR:  GOBIN is not in the PATH environment variable."
         else
             if [[ $GOROOT == *"$GOVER"* ]]; then
                 if [ "$GOPATH" == "" ]; then
                     tput setaf 3
                     printf "WARNING: \$GOPATH is not set."
                 else
-                    if [[ ! -e "$GOPATH" ]]; then
-                        tput setaf 3
-                        printf "WARNING: \$GOPATH is not a valid directory."
-                    else
+                    TMPFILE="/tmp/$(date +%Y%m%d-%H%M%S)_GOPATH_ERR_FOUND"
+                    echo $GOPATH | tr ':' '\n' | while read line
+                    do
+                        if [[ ! -e "$line" ]]; then
+                            echo "true" > $TMPFILE
+                            tput setaf 3
+                            printf "WARNING: $line is not a valid directory. "
+                        fi
+                    done
+                    if [ ! -f $TMPFILE ]; then
                         tput setaf 2
-                        printf $GOOD_STATUS;
+                        printf $GOOD_STATUS;                  
                     fi
+                    rm $TMPFILE
                 fi
-             else
+            else
                 tput setaf 1
                 printf "ERROR: \$GOROOT != Go version"
             fi
@@ -356,14 +366,10 @@ elif [ "$1" == "info" ]; then
     echo "$(goversions)"
 
 elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then
-
-   # set -x
-   # trap read debug
-
+    # set -x
+    # trap read debug
     # Accepts versions of format:  Examples: 1.3.3, 1.4
     switchgo $1
-
 else
     usage
-
 fi

@@ -358,6 +358,7 @@ elif [ "$1" == "info" ]; then
     echo "GOOS  : $GOOS"
     echo "GOARCH: $GOARCH"
     if [ ! -z $VERBOSE ]; then
+       echo -e "----\nPATH: $(echo $PATH | tr ':' '\n')\n----"
        echo "Current Go version: $(goversion)"
        echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
        echo "switchtogo version file: $GOENV_VER_FILE"

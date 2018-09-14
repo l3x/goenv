@@ -304,8 +304,11 @@ elif [ "$1" == "init" ]; then
         echo "cur_dir ($cur_dir) != GOPATH ($GOPATH)"
         echo "Continue to set GOPATH to $cur_dir  (CTRL+C)"
         read x
-        GOPATH="$cur_dir"
     fi
+
+    export GOPATH="$cur_dir"
+    export GOBIN="$GOPATH/bin"
+    export PATH=$GOBIN:$PATH
 
     if [ -s $GOENV_VER_FILE ]; then
         switchgo $(cat $GOENV_VER_FILE)

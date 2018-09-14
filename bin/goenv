@@ -80,10 +80,14 @@ function usage {
 }
 
 function lastest_brew_go_version {
-    if [ ! -s $LATEST_BREW_GO_VER_FILE ]; then
-        echo "$(goenv versions available|tail +1|head -n 1|cut -d' ' -f1)" > $LATEST_BREW_GO_VER_FILE
+    # goenv versions available is deprecated!
+    # echo "$(goenv versions available|tail +1|head -n 1|cut -d' ' -f1)" > $LATEST_BREW_GO_VER_FILE
+    last_brewed_go=$(echo "$(brew info go|grep Cellar | tail -n 1 | cut -d ' ' -f 1)")
+    if [ -z $last_brewed_go ]; then
+        echo "Error finding last last_brewed_go version"
+    else
+        echo "$(basename $last_brewed_go)"
     fi
-    cat $LATEST_BREW_GO_VER_FILE
 }
 
 function switchtogo_version {
@@ -293,6 +297,14 @@ elif [ "$1" == "init" ]; then
         install $LATEST_BREW_GO_VER
         echo "GOENV_VER_FILE: $GOENV_VER_FILE"
         echo "$LATEST_BREW_GO_VER" > $GOENV_VER_FILE
+    fi
+    
+    cur_dir=$(pwd)
+    if [ "$cur_dir" != "$GOPATH" ]; then
+        echo "cur_dir ($cur_dir) != GOPATH ($GOPATH)"
+        echo "Continue to set GOPATH to $cur_dir  (CTRL+C)"
+        read x
+        GOPATH="$cur_dir"
     fi
 
     if [ -s $GOENV_VER_FILE ]; then

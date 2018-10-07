@@ -14,15 +14,17 @@ Assumptions:
 Notes:
 * No shims. No rehashing. Just plain shell commands.
 * Current version works on linux. 
+* Source goenv when you want it to update environment variables.
 
 Examples:
   goenv install go1.9.4             # To install go1.9.4
   goenv uninstall go1.9.4           # To uninstall go1.9.4
-  goenv list-go-installed-versions  # To get a list of installed Go versions
-  goenv list-go-available-versions  # To get a list of available Go versions
+  goenv list-installed-versions     # To get a list of installed Go versions
+  goenv list-available-versions     # To get a list of available Go versions
   goenv info                        # To golang info
   goenv print-env-vars              # To goenv environment variables
   goenv run-test                    # To run goenv tests
+  . goenv use go1.9.4               # To set your go runtime to go1.9.4
   . go-env set-current-gopath       # Source and run this when you're in your project's gopath
 
 TEXT
@@ -65,8 +67,10 @@ function set_current_gopath {
 	fi
 	set_env_vars
 	printf "$(pwd)" > $GOENV_CURRENT_GOPATH_FILE
-	set_env_vars
-	add_to_path "$GOROOT/bin"
+	
+	export GOPATH="$(pwd)" 
+	export GOBIN=$GOPATH/bin
+	add_to_path $GOBIN
 }
 
 
@@ -303,6 +307,34 @@ function uninstall {
     rmrf $GOENV_GOROOTS_PATH/$go_version  	
 }
 
+# $1 must be in this format: go1.11.1
+function use_ver {
+    go_version=$1
+    if [ -z $go_version ]; then
+		echo "Missing GO_VERSION."
+		echo "Usage: $(basename $0) <GO_VERSION>"
+		echo "Example: $(basename $0) go1.11.1"
+		return &>/dev/null; exit 2
+    fi
+    if [ "$(is_valid_go_ver ${go_version})" == "false" ]; then
+		echo "Invalid GO_VERSION."
+		echo "Usage: $(basename $0) <GO_VERSION>"
+		echo "Example: $(basename $0) go1.11.1"
+		return &>/dev/null; exit 2
+    fi
+	ensure_go_roots_dir_exists
+    pushd $GOENV_GOROOTS_PATH &>/dev/null
+    if [ ! -d "./$go_version" ]; then
+		echo "$go_version does not exist. You must first install it."
+		return
+    fi
+	export GOROOT="$HOME/.goenv/goroots/$go_version"
+    save_goroot_bootstrap_path=$(get_goroot_bootstrap_path)
+	add_to_path "${GOROOT}/bin"
+    printf "GOROOT_BOOTSTRAP=${save_goroot_bootstrap_path}\nGOROOT=${GOROOT}\n" > $GOENV_ENV_PATH
+    popd &>/dev/null
+}
+
 function list_installed_goroots {
 	ensure_go_roots_dir_exists
 	find $GOENV_GOROOTS_PATH -maxdepth 1 -type d | tail -n +2
@@ -333,13 +365,7 @@ function list_available_go_versions {
 }
 
 function info {
-	echo "
-GOROOT: $GOROOT
-GOPATH: $GOPATH
-GOBIN : $GOPBIN
-PATH: 
-$(echo $PATH | tr ':' '\n')
-"
+	print_env_vars
 }
 
 function help {
@@ -363,6 +389,9 @@ if [ "$1" == "install" ]; then
 elif [ "$1" == "uninstall" ]; then
 	shift 1
 	uninstall "$@"
+elif [ "$1" == "use" ]; then
+	shift 1
+	use_ver "$@"
 elif [ "$1" == "info" ]; then
 	info
 elif [ "$1" == "help" ]; then

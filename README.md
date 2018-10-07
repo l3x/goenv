@@ -2,14 +2,11 @@
 
 <img align="right" src="https://github.com/l3x/goenv/blob/master/gopher-world-small.png">
 
-Use goenv to find, (un)install or switch to a version of Go.
+Use goenv to find, (un)install or switch to any version of Go.
 
-**Easy to use** Use goenv to install a version of Go. Run setup once and
-forget about it until you're ready to change your Go runtime version.
+**Easy to use** You can set any Go project to use any goenv installed version of Go
 
 It's as light-weight and unobtrusive as it gets.
-
-You can install, and later upgrade goenv using git.
 
 ```
 $ goenv help

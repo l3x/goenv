@@ -73,6 +73,13 @@ function set_current_gopath {
 	export GOPATH="$(pwd)" 
 	export GOBIN=$GOPATH/bin
 	add_to_path $GOBIN
+	
+	echo "Do you want to cd into your project's source directory? (yes/no)"
+	read x && x=${x:-no}
+	if [ "$x" == "yes" ]; then
+		src_path=$(find . -name $(basename $(pwd)))
+		cd $src_path
+	fi
 }
 
 function is_current_gopath_valid {

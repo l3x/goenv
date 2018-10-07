@@ -1,5 +1,3 @@
-version
-lastest-brew-go-version
 goroots
-bin/goenv
+.env
 

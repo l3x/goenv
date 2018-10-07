@@ -2,15 +2,15 @@
 
 <img align="right" src="https://github.com/l3x/goenv/blob/master/gopher-world-small.png">
 
-**Having problems getting your Go source code to build and run?**
+* Having problems getting your Go source code to build and run?
 
-**Tired of keeping track of which directory is your GOPATH and where to edit your source files?**
+* Tired of keeping track of which directory is your GOPATH and where to edit your source files?
 
-**Are you a consultant that must manage multiple projects with various Go runtime requirements?**
+* Are you a consultant that must manage multiple projects with various Go runtime requirements?
 
-**Want to see how your Go app runs when compiled using various versions of Go?**
+* Want to see how your Go app runs when compiled using various versions of Go?
 
-**Like to keep things simple?**
+* Like to keep things simple?
 
 Use goenv to find, (un)install or start using any version of Go.
 

@@ -1,4 +1,4 @@
-# Manage your Go runtime environment with goenv.
+# Manage your Go environment with goenv.
 
 <img align="right" src="https://github.com/l3x/goenv/blob/master/gopher-world-small.png">
 

@@ -66,7 +66,7 @@ Examples:
   . goenv cd                        # Source and run this to cd into your last/current GOPATH
 ```
 
-## goenv info
+## goenv info and set commands
 ```
 $ goenv info
 
@@ -80,8 +80,8 @@ $ goenv info
  $(pwd):                /home/lex/GOPATHs/helloworld
  GOROOT:                /home/lex/.goenv/goroots/go1.9.5
  --- Use set command for following ---
- GOPATH: /home/lex/.goenv/goroots/go1.9.4
- GOBIN:  /home/lex/.goenv/goroots/go1.9.4/bin
+ GOPATH: 
+ GOBIN:  
  PATH:   
 /home/lex/.goenv/goroots/go1.9.5/bin
 /home/lex/.goenv/goroots/go1.9.4/bin
@@ -96,6 +96,38 @@ $ goenv info
 ~/bin
 /home/lex/.goenv/bin
 
+$ . goenv set
+Do you want to cd into your project's source directory? (yes/no)
+yes
+
+$ goenv info
+
+ CURRENT GO VERSION:    go version go1.9.5 linux/amd64
+ GOENV_HOME:            /home/lex/.goenv
+ GOENV_GOROOTS_PATH:    /home/lex/.goenv/goroots
+ GOENV_ENV_PATH:        /home/lex/.goenv/.env
+ GOENV_SHELL_INIT_FILE: /home/lex/.bashrc
+ GOENV_GO_SOURCE_REPO:  https://go.googlesource.com/go
+ GOENV_CURRENT_GOPATH:  /home/lex/.goenv/.current_gopath
+ $(pwd):                /home/lex/GOPATHs/helloworld/src/github.com/go-training/helloworld
+ GOROOT:                /home/lex/.goenv/goroots/go1.9.5
+ --- Use set command for following ---
+ GOPATH: /home/lex/GOPATHs/helloworld
+ GOBIN:  /home/lex/GOPATHs/helloworld/bin
+ PATH:   
+/home/lex/GOPATHs/helloworld/bin
+/home/lex/.goenv/goroots/go1.9.5/bin
+/home/lex/.goenv/goroots/go1.9.4/bin
+/usr/local/bin
+/usr/bin
+/bin
+/usr/local/sbin
+/usr/lib/jvm/default/bin
+/usr/bin/site_perl
+/usr/bin/vendor_perl
+/usr/bin/core_perl
+~/bin
+/home/lex/.goenv/bin
 ```
 
 ## goenv list-installed-versions

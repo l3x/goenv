@@ -28,8 +28,8 @@ Examples:
   goenv info                        # To print goenv environment variable
   goenv run-test                    # To run goenv tests
   . goenv use go1.9.4               # Source and run this to set your go runtime to go1.9.4
-  . go-env set                      # Source and run to set GOPATH, GOBIN and PATH
-
+  . goenv set                       # Source and run to set GOPATH, GOBIN and PATH
+  . goenv cd                        # Source and run this to cd into your last/current GOPATH
 TEXT
 
 function set_env_vars {
@@ -42,17 +42,18 @@ function set_env_vars {
 }
 function print_env_vars {
 	echo "
-	GOENV_HOME:           $GOENV_HOME
-	GOENV_GOROOTS_PATH:   $GOENV_GOROOTS_PATH
-	GOENV_ENV_PATH:       $GOENV_ENV_PATH
-	GOENV_GO_SOURCE_REPO: $GOENV_GO_SOURCE_REPO
-	GOENV_CURRENT_GOPATH: $GOENV_CURRENT_GOPATH
-	GOROOT:               $GOROOT
-	--- Use set command for following ---
-	GOPATH: $GOPATH
-	GOBIN:  $GOBIN
-	PATH:   $PATH
-	"
+ GOENV_HOME:           $GOENV_HOME
+ GOENV_GOROOTS_PATH:   $GOENV_GOROOTS_PATH
+ GOENV_ENV_PATH:       $GOENV_ENV_PATH
+ GOENV_GO_SOURCE_REPO: $GOENV_GO_SOURCE_REPO
+ GOENV_CURRENT_GOPATH: $GOENV_CURRENT_GOPATH
+ GOROOT:               $GOROOT
+ --- Use set command for following ---
+ GOPATH: $GOPATH
+ GOBIN:  $GOBIN
+ PATH:   
+$(echo $PATH | tr ':' '\n')
+"
 }
 
 function set_current_gopath {
@@ -72,6 +73,27 @@ function set_current_gopath {
 	if [ "$x" == "yes" ]; then
 		src_path=$(find . -name $(basename $(pwd)))
 		cd $src_path
+	fi
+}
+
+function is_current_gopath_valid {
+	if [ ! -e $GOENV_CURRENT_GOPATH ]; then
+		printf "false"; return
+	fi
+	gopath=$(cat $GOENV_CURRENT_GOPATH)
+	if [ ! -d "$gopath/src" ]; then
+		printf "false"; return
+	fi
+	printf "true"
+}
+
+function cd_to_gopath {
+	if [ "$(is_current_gopath_valid)" != "true" ]; then
+		echo "GOENV_CURRENT_GOPATH value is not valid.  Go to a Go project directory and run the set command."
+	else
+		gopath=$(cat $GOENV_CURRENT_GOPATH)
+		cd $gopath
+		set_current_gopath
 	fi
 }
 
@@ -360,7 +382,7 @@ function list_available_go_versions {
 }
 
 function info {
-	printf "\n	CURRENT GO VERSION:   $(go version)"
+	printf "\n CURRENT GO VERSION:   $(go version)"
 	print_env_vars
 }
 
@@ -390,7 +412,7 @@ elif [ "$1" == "use" ]; then
 	use_ver "$@"
 elif [ "$1" == "info" ]; then
 	info
-elif [ "$1" == "help" ]; then
+elif [ "$1" == "help" ] ||  [ "$1" == "" ]; then
 	help
 elif [ "$1" == "list-installed-versions" ]; then
 	list_installed_goroots	
@@ -403,4 +425,6 @@ elif [ "$1" == "set-env-vars" ]; then
 	set_env_vars
 elif [ "$1" == "set" ]; then
 	set_current_gopath
+elif [ "$1" == "cd" ]; then
+	cd_to_gopath
 fi

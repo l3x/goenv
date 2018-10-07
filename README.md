@@ -77,7 +77,7 @@ $ goenv info
  GOENV_SHELL_INIT_FILE: /home/lex/.bashrc
  GOENV_GO_SOURCE_REPO:  https://go.googlesource.com/go
  GOENV_CURRENT_GOPATH:  /home/lex/.goenv/.current_gopath
- $(pwd):                /home/lex/.goenv
+ $(pwd):                /home/lex/GOPATHs/helloworld
  GOROOT:                /home/lex/.goenv/goroots/go1.9.5
  --- Use set command for following ---
  GOPATH: /home/lex/.goenv/goroots/go1.9.4

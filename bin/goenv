@@ -17,6 +17,7 @@ Notes:
 * No shims. No rehashing. Just plain shell commands.
 * Current version works on linux. (Should work on macOS and Windows).
 * Source goenv when you want it to update environment variables.
+* You must be in a Go project directory to run the set command.
 
 Examples:
   goenv help                        # To print this help info
@@ -27,48 +28,40 @@ Examples:
   goenv info                        # To print goenv environment variable
   goenv run-test                    # To run goenv tests
   . goenv use go1.9.4               # Source and run this to set your go runtime to go1.9.4
-  . go-env set-current-gopath       # Source and run this when you're in your project's gopath
+  . go-env set                      # Source and run to set GOPATH, GOBIN and PATH
 
 TEXT
-
 
 function set_env_vars {
 	export GOENV_HOME=$HOME/.goenv
 	export GOENV_GOROOTS_PATH=$GOENV_HOME/goroots
 	export GOENV_ENV_PATH=$GOENV_HOME/.env
 	export GOENV_GO_SOURCE_REPO="https://go.googlesource.com/go"
-	export GOROOT=$(get_goroot_path)
-	export GOENV_CURRENT_GOPATH_FILE=$GOENV_HOME/.current_gopath
-	if [ "$(is_current_gopath_valid)" == "true" ]; then
-		export GOPATH=$(cat $GOENV_CURRENT_GOPATH_FILE)
-		export GOBIN=$GOPATH/bin
-		add_to_path $GOBIN
-	else
-		unset GOPATH
-		unset GOBIN
-	fi 
+	export GOENV_CURRENT_GOPATH=$GOENV_HOME/.current_gopath
+	export GOROOT=$(get_goroot_path) 
 }
 function print_env_vars {
 	echo "
-	GOENV_HOME: $GOENV_HOME
-	GOENV_GOROOTS_PATH: $GOENV_GOROOTS_PATH
-	GOENV_ENV_PATH: $GOENV_ENV_PATH
+	GOENV_HOME:           $GOENV_HOME
+	GOENV_GOROOTS_PATH:   $GOENV_GOROOTS_PATH
+	GOENV_ENV_PATH:       $GOENV_ENV_PATH
 	GOENV_GO_SOURCE_REPO: $GOENV_GO_SOURCE_REPO
-	GOROOT: $GOROOT
+	GOENV_CURRENT_GOPATH: $GOENV_CURRENT_GOPATH
+	GOROOT:               $GOROOT
+	--- Use set command for following ---
 	GOPATH: $GOPATH
-	GOBIN: $GOBIN
-	PATH: $PATH
+	GOBIN:  $GOBIN
+	PATH:   $PATH
 	"
 }
 
 function set_current_gopath {
-	# Assumes you're in the current gopath
 	if [ ! -e "$(pwd)/src" ]; then
-		echo "You must be in a valid go project (with a src directory) to run this command."
+		echo "You must be in a valid go project (with a src directory) to set GOPATH, GOBIN and PATH."
 		return
 	fi
 	set_env_vars
-	printf "$(pwd)" > $GOENV_CURRENT_GOPATH_FILE
+	printf "$(pwd)" > $GOENV_CURRENT_GOPATH
 	
 	export GOPATH="$(pwd)" 
 	export GOBIN=$GOPATH/bin
@@ -80,17 +73,6 @@ function set_current_gopath {
 		src_path=$(find . -name $(basename $(pwd)))
 		cd $src_path
 	fi
-}
-
-function is_current_gopath_valid {
-	if [ ! -e $GOENV_CURRENT_GOPATH_FILE ]; then
-		printf "false"; return
-	fi
-	gopath=$(cat $GOENV_CURRENT_GOPATH_FILE)
-	if [ ! -d "$gopath/src" ]; then
-		printf "false"; return
-	fi
-	printf "true"
 }
 
 function is_prereq_satisfied {
@@ -378,6 +360,7 @@ function list_available_go_versions {
 }
 
 function info {
+	printf "\n	CURRENT GO VERSION:   $(go version)"
 	print_env_vars
 }
 
@@ -418,6 +401,6 @@ elif [ "$1" == "run-tests" ]; then
 	run_tests "$@"
 elif [ "$1" == "set-env-vars" ]; then
 	set_env_vars
-elif [ "$1" == "set-current-gopath" ]; then
+elif [ "$1" == "set" ]; then
 	set_current_gopath
 fi

@@ -14,29 +14,34 @@ You can install, and later upgrade goenv using git.
 ```
 $ goenv help
 Filename:     goenv
-Version:      2.0.1
+Version:      2.0.0
 Purpose:      To manage your Go (golang) runtime version(s).
 Copyright:    United Ledger, LLC
 
 Assumptions: 
-* You must have  access to the internet and git to install a new go version.
-* Your OS's equivalent of build-essential must also be installed to install go.
+* You must have  access to the internet and git to install a new Go version.
+* Your OS's equivalent of build-essential must also be installed to install Go.
 * The rmrf script is in your PATH (used in install and uninstall commands)
 * egrep must be installed.
+* Go must already be installed (via your system package manager)
 
 Notes:
+* goenv allows you to manage multiple versions of Go.
 * No shims. No rehashing. Just plain shell commands.
-* Current version works on linux. 
+* Current version works on linux. (Should work on macOS and Windows).
+* Source goenv when you want it to update environment variables.
 
 Examples:
-  goenv install go1.9.4             # To install go1.9.4
-  goenv uninstall go1.9.4           # To uninstall go1.9.4
-  goenv list-go-installed-versions  # To get a list of installed Go versions
-  goenv list-go-available-versions  # To get a list of available Go versions
-  goenv info                        # To golang info
-  goenv print-env-vars              # To goenv environment variables
+  goenv help                        # To print this help info
+  goenv install go1.9.4             # To install go1.9.4 (or any Go version)
+  goenv uninstall go1.9.4           # To uninstall go1.9.4 (or any installed Go version)
+  goenv list-installed-versions     # To get a list of installed Go versions
+  goenv list-available-versions     # To get a list of available Go versions
+  goenv info                        # To print goenv environment variable
   goenv run-test                    # To run goenv tests
+  . goenv use go1.9.4               # Source and run this to set your go runtime to go1.9.4
   . go-env set-current-gopath       # Source and run this when you're in your project's gopath
+
 ```
 
 

@@ -1,30 +1,32 @@
 #!/bin/bash
 read -d '' INFO << TEXT
 Filename:     goenv
-Version:      2.0.1
+Version:      2.0.0
 Purpose:      To manage your Go (golang) runtime version(s).
 Copyright:    United Ledger, LLC
 
 Assumptions: 
-* You must have  access to the internet and git to install a new go version.
-* Your OS's equivalent of build-essential must also be installed to install go.
+* You must have  access to the internet and git to install a new Go version.
+* Your OS's equivalent of build-essential must also be installed to install Go.
 * The rmrf script is in your PATH (used in install and uninstall commands)
 * egrep must be installed.
+* Go must already be installed (via your system package manager)
 
 Notes:
+* goenv allows you to manage multiple versions of Go.
 * No shims. No rehashing. Just plain shell commands.
-* Current version works on linux. 
+* Current version works on linux. (Should work on macOS and Windows).
 * Source goenv when you want it to update environment variables.
 
 Examples:
-  goenv install go1.9.4             # To install go1.9.4
-  goenv uninstall go1.9.4           # To uninstall go1.9.4
+  goenv help                        # To print this help info
+  goenv install go1.9.4             # To install go1.9.4 (or any Go version)
+  goenv uninstall go1.9.4           # To uninstall go1.9.4 (or any installed Go version)
   goenv list-installed-versions     # To get a list of installed Go versions
   goenv list-available-versions     # To get a list of available Go versions
-  goenv info                        # To golang info
-  goenv print-env-vars              # To goenv environment variables
+  goenv info                        # To print goenv environment variable
   goenv run-test                    # To run goenv tests
-  . goenv use go1.9.4               # To set your go runtime to go1.9.4
+  . goenv use go1.9.4               # Source and run this to set your go runtime to go1.9.4
   . go-env set-current-gopath       # Source and run this when you're in your project's gopath
 
 TEXT
@@ -73,7 +75,6 @@ function set_current_gopath {
 	add_to_path $GOBIN
 }
 
-
 function is_current_gopath_valid {
 	if [ ! -e $GOENV_CURRENT_GOPATH_FILE ]; then
 		printf "false"; return
@@ -84,7 +85,6 @@ function is_current_gopath_valid {
 	fi
 	printf "true"
 }
-
 
 function is_prereq_satisfied {
 	go version &>/dev/null
@@ -163,7 +163,6 @@ function get_goenv_env_value {
 	ret=$(grep $env_var_name $GOENV_ENV_PATH | cut -d '=' -f 2)
 	printf "$ret"
 }
-
 
 function get_goroot_bootstrap_path {
 	get_goenv_env_value GOROOT_BOOTSTRAP
@@ -345,14 +344,21 @@ function list_available_go_versions {
 	num_versions_installed=$(find $GOENV_GOROOTS_PATH -maxdepth 1 -type d | tail -n +2 | wc | awk '{print $1}')
 	if [ "$num_versions_installed" == "0" ]; then
 		go_version=go1.11.1
-		echo "We must download a go version in order to proceed.  About to download $go_version.  Do you want to continue? (yes/no)"
-		read x && x=${x:-no}
-		if [ "$x" != "yes" ]; then
-			echo "WARNING: Since you didn't type 'yes' ... We're aborting!"
-			return &>/dev/null
+		tmp_goroot_path=$GOENV_HOME/tmp_goroot
+		if [ -d $tmp_goroot_path/$go_version ]; then
+			cd $tmp_goroot_path
+		else
+			mkdir $tmp_goroot_path
+			echo "We must download a go version in order to proceed.  About to download $go_version.  Do you want to continue? (yes/no)"
+			read x && x=${x:-no}
+			if [ "$x" != "yes" ]; then
+				echo "WARNING: Since you didn't type 'yes' ... We're aborting!"
+				return &>/dev/null
+			fi
+			cd $tmp_goroot_path
+			git clone $GOENV_GO_SOURCE_REPO $go_version
+			cd $go_version			
 		fi
-		git clone $GOENV_GO_SOURCE_REPO $go_version
-		cd $go_version
 	else
 		first_goroot=$(find $GOENV_GOROOTS_PATH -maxdepth 1 -type d | tail -n 1)
 		if [ ! -d $first_goroot ]; then
@@ -405,12 +411,6 @@ elif [ "$1" == "run-tests" ]; then
 	run_tests "$@"
 elif [ "$1" == "set-env-vars" ]; then
 	set_env_vars
-elif [ "$1" == "print-env-vars" ]; then
-	print_env_vars
-elif [ "$1" == "get-goroot-path" ]; then
-	get_goroot_path
-elif [ "$1" == "get-goroot" ]; then
-	get_goroot 
 elif [ "$1" == "set-current-gopath" ]; then
 	set_current_gopath
 fi

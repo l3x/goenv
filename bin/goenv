@@ -1,398 +1,387 @@
-#!/usr/bin/env bash
+#!/bin/bash
 read -d '' INFO << TEXT
-Filename:    goenv
-Version:     1.1.3
-Purpose:     To manage your Go (golang) runtime version(s).
-Usage:       goenv [ 9.9.9 | persist | init | setup | info | check | version [goenv] | versions [available] | install 9.9 | uninstall 9.9 ]
-Assumptions: 1) You have homebrew installed
+Filename:     goenv
+Version:      2.0.1
+Purpose:      To manage your Go (golang) runtime version(s).
+Copyright:    United Ledger, LLC
+
+Assumptions: 
+* You must have  access to the internet and git to install a new go version.
+* Your OS's equivalent of build-essential must also be installed to install go.
+* The rmrf script is in your PATH (used in install and uninstall commands)
+* egrep must be installed.
 
 Notes:
-1) Run "goenv check" to verify that the $GOPATH and the current Go runtime version are equivalent.
-2) If you call "goenv init", it will create $HOME/.goenv that will have the current Go runtime version number.
-3) After running "goenv setup", you need to open a new terminal window (or source the current one).
-4) No shims.  No rehashing.  Just plain shell commands and some brew.
-5) Source goenv if you want to install or switch to a specific version of Go.
-6) Author: Lex Sheehan
+* No shims. No rehashing. Just plain shell commands.
+* Current version works on linux. 
 
 Examples:
-  . goenv 1.4.3                        # To switch to latest version of golang 1.4
-  . goenv 1.5.4                        # To switch to latest version of golang 1.5
-  . goenv 1.9.4                        # To switch to go version 1.9.4
-  . goenv perisist                     # To persist your go version in the $HOME/.goenv file
-  . goenv init                         # To initialize your go environment with the version in the $HOME/.goenv file
-  goenv setup                          # To install goenv (only need to do once).  Will be active in subsequent shells.
-  goenv info                           # To display goenv information
-  goenv help                           # To display goenv help information
-  goenv check                          # To verify that your go runtime environment is okay
-  goenv version                        # To get the current go runtime version
-  goenv version goenv                  # To get the current goenv version
-  goenv versions available             # To get a list of available Go versions
-  goenv install 1.4                    # To install latest version of golang 1.4
-  goenv uninstall 1.4                  # To uninstall latest version of golang 1.4
-  goenv install 1.5                    # To install latest version of golang 1.5
-  goenv uninstall 1.5                  # To uninstall latest version of golang 1.5
+  goenv install go1.9.4             # To install go1.9.4
+  goenv uninstall go1.9.4           # To uninstall go1.9.4
+  goenv list-go-installed-versions  # To get a list of installed Go versions
+  goenv list-go-available-versions  # To get a list of available Go versions
+  goenv info                        # To golang info
+  goenv print-env-vars              # To goenv environment variables
+  goenv run-test                    # To run goenv tests
+  . go-env set-current-gopath       # Source and run this when you're in your project's gopath
+
 TEXT
 
-USAGE=`echo "$INFO"|grep Usage`
 
-if [ ! -z $2 ]; then
-    if [ "$2" == "-v" ] || [ "$2" == "--verbose" ]; then
-        VERBOSE=true
-    elif [ "$2" != "goenv" ]; then
-        echo "Invalid parameter: $2"
-        exit 2
-    fi
-fi
-GOENV_VERSION=$(echo "$INFO"|grep Version:)
-BREW_GO_ROOT=/usr/local/Cellar/go
-GOENV_VER_FILE=$HOME/.goenv/version
-GOOD_STATUS="√ All good."
-TIP="Don't forget to source goenv when running goenv commands that change your Go version (For more info run $ goenv info)"
-
-function goversion {
-    GOTEST=(`go version 2>/dev/null`)
-    if [ "$?" != "0" ]; then
-        exit 2
-    fi
-    echo $(go version|cut -d" " -f3|while read n; do echo "${n:2}"; done)
+function set_env_vars {
+	export GOENV_HOME=$HOME/.goenv
+	export GOENV_GOROOTS_PATH=$GOENV_HOME/goroots
+	export GOENV_ENV_PATH=$GOENV_HOME/.env
+	export GOENV_GO_SOURCE_REPO="https://go.googlesource.com/go"
+	export GOROOT=$(get_goroot_path)
+	export GOENV_CURRENT_GOPATH_FILE=$GOENV_HOME/.current_gopath
+	if [ "$(is_current_gopath_valid)" == "true" ]; then
+		export GOPATH=$(cat $GOENV_CURRENT_GOPATH_FILE)
+		export GOBIN=$GOPATH/bin
+		add_to_path $GOBIN
+	else
+		unset GOPATH
+		unset GOBIN
+	fi 
+}
+function print_env_vars {
+	echo "
+	GOENV_HOME: $GOENV_HOME
+	GOENV_GOROOTS_PATH: $GOENV_GOROOTS_PATH
+	GOENV_ENV_PATH: $GOENV_ENV_PATH
+	GOENV_GO_SOURCE_REPO: $GOENV_GO_SOURCE_REPO
+	GOROOT: $GOROOT
+	GOPATH: $GOPATH
+	GOBIN: $GOBIN
+	PATH: $PATH
+	"
 }
 
-function goversions {
-    if [ ! -z $VERBOSE ]; then
-        echo "Installed Go versions:"
-        brew info go|grep Cellar|grep -v export
-    fi
-}
-
-function current_go_path {
-    CURRENT_GO_VERSION=$1
-    RET=""
-    if [ -z $CURRENT_GO_VERSION ]; then
-        echo "No CURRENT_GO_VERSION!"
-    else
-        RET="$(goversions | grep 1.4.3 | cut -d ' ' -f 1)"
-    fi
-    echo "$RET"
-}
-
-function usage {
-    echo $USAGE
-}
-
-function lastest_brew_go_version {
-    # goenv versions available is deprecated!
-    # echo "$(goenv versions available|tail +1|head -n 1|cut -d' ' -f1)" > $LATEST_BREW_GO_VER_FILE
-    last_brewed_go=$(echo "$(brew info go|grep Cellar | tail -n 1 | cut -d ' ' -f 1)")
-    if [ -z $last_brewed_go ]; then
-        echo "Error finding last last_brewed_go version"
-    else
-        echo "$(basename $last_brewed_go)"
-    fi
-}
-
-function switchtogo_version {
-    if [ -s $GOENV_VER_FILE ]; then
-        echo $(cat $GOENV_VER_FILE)
-    else
-        echo ""
-    fi
-}
-
-function goenv_version {
-    echo $GOENV_VERSION|cut -d' ' -f2
-}
-
-function set_goenv_version {
-    echo $(goenv_version) > $GOENV_VER_FILE
+function set_current_gopath {
+	# Assumes you're in the current gopath
+	if [ ! -e "$(pwd)/src" ]; then
+		echo "You must be in a valid go project (with a src directory) to run this command."
+		return
+	fi
+	set_env_vars
+	printf "$(pwd)" > $GOENV_CURRENT_GOPATH_FILE
+	set_env_vars
+	add_to_path "$GOROOT/bin"
 }
 
 
-function switchgo {
-    VER=$1
-    if [ -z $VER ]; then
-        echo "switchgo called without passing a go version to switch to."
-        return
-    fi
-    echo "Switching Go to version $VER ..."
-
-    GOVERSIONS=$(brew info go|grep Cellar)
-
-    if [[ $GOVERSIONS != *"$VER"* ]]; then
-        echo "Requested version ($VER) does not exist locally...Attempting to install from archives..."
-
-        install $VER
-    fi
-
-    export GOROOT=$BREW_GO_ROOT/$VER/libexec
-    if [[ ! -d $GOROOT ]]; then
-        echo "ERROR:  $GOROOT is not a directory!"
-        return
-    else
-        export PATH=$GOROOT/bin:$PATH
-    fi
-
-    NEW_GO_BIN=$GOROOT/bin/go
-    GO_BINARY=$(which go)
-    if [[ -e $NEW_GO_BIN ]] && [[ -e $GO_BINARY ]]; then
-        brew link --overwrite go  &>/dev/null
-        brew switch go $VER &>/dev/null
-        echo $VER > $GOENV_VER_FILE
-    else
-        echo "ERROR:  $NEW_GO_BIN should exist and \$(which go) should be a link."
-    fi
-    GOBIN=$GOBIN
-    if [ "$GOBIN" == "" ]; then
-        if [ "$GOPATH" == "" ]; then
-            echo "Set GOPATH and try again (to set GOBIN)."
-        else
-            export GOBIN=$GOPATH/bin
-            echo "Exported GOBIN=$GOBIN"
-        fi
-    fi
-
+function is_current_gopath_valid {
+	if [ ! -e $GOENV_CURRENT_GOPATH_FILE ]; then
+		printf "false"; return
+	fi
+	gopath=$(cat $GOENV_CURRENT_GOPATH_FILE)
+	if [ ! -d "$gopath/src" ]; then
+		printf "false"; return
+	fi
+	printf "true"
 }
 
-# TODO: automate
-function install {
-    VER=$1
-    HOMEBREW_BASE=$( brew --prefix )
-    if [ "$VER" == "1.4" ]; then
-      brew install go14
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         ln -s /usr/local/Cellar/go14/1.4.3 /usr/local/Cellar/go/1.4.3
-      fi
-    elif [ "$VER" == "1.5" ]; then
-      brew install go15
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         ln -s /usr/local/Cellar/go15/1.5.4 /usr/local/Cellar/go/1.5.4
-      fi
-    elif [ "$VER" == "1.6" ]; then
-      brew install go16
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      else
-         ln -s /usr/local/Cellar/go16/1.6.2 /usr/local/Cellar/go/1.6.2
-      fi
-    elif [ "$VER" == "1.7" ]; then
-      # brew install go
-      brew upgrade go
-      if [ "$?" != "0" ]; then
-         echo "Unable to install version ($VER)"
-      fi
-	elif [ "$VER" == "1.9.4" ]; then
-		# brew install go
-		brew install go@1.9
-		if [ "$?" != "0" ]; then
-			echo "Unable to install version ($VER)"
-		else
-			if [ -e /usr/local/Cellar/go@1.9/1.9.4 ]; then
-				ln -s /usr/local/Cellar/go@1.9/1.9.4 /usr/local/Cellar/go/1.9.4
+
+function is_prereq_satisfied {
+	go version &>/dev/null
+	if [ "$?" != "0" ]; then
+		echo "Go runtime not found"
+		print "false"; return
+	fi
+	printf "true"
+}
+
+function get_goroot {
+	if [ -L $(which go) ]; then
+		printf $(echo $(dirname $(dirname $(ls -l $(which go) | cut -d ' ' -f 12))))
+	else
+		printf $(echo $(dirname $(dirname $(ls -l $(which go) | cut -d ' ' -f 10))))
+	fi
+}
+function test_get_goroot {
+	goroot="$(get_goroot)"
+	find "$goroot/src/runtime/cgo" &>/dev/null
+	if [ "$?" == "0" ]; then
+		echo "${FUNCNAME[0]} PASSED"
+	else
+		echo "${FUNCNAME[0]} FAILED"
+	fi
+}
+
+# Returns "true" or "false"
+function is_valid_go_ver {
+	go_version=$1
+	echo "$go_version" | egrep "go[0-9]\.[0-9].+" &>/dev/null
+	if [ "$?" != "0" ]; then
+		printf "false"
+	else
+		printf "true"
+	fi
+}
+function test_is_valid_go_ver {
+	if \
+		[ "$(is_valid_go_ver go1.9.4)" == "true" ] && \
+		[ "$(is_valid_go_ver 1.9.4)" == "false" ]; then
+		echo "${FUNCNAME[0]} PASSED"
+	else
+		echo "${FUNCNAME[0]} FAILED"
+	fi
+}
+
+function is_goenv_file_valid {
+	if [ -z $GOENV_ENV_PATH ]; then
+		(>&2 echo "Missing GOENV_ENV_PATH environment variable!")
+		printf "false"
+	fi
+	if [ ! -e $GOENV_ENV_PATH ]; then
+		msg="goenv_env_path ($GOENV_ENV_PATH) does not exist!  Run the following and try again:"
+		msg="${msg}\n  . $(basename) init --install-go-from-source"
+		(>&2 echo "$msg")
+		printf "false"
+	fi
+	printf "true"
+}
+function test_is_goenv_file_valid {
+	touch $GOENV_HOME
+	if [ "$(is_goenv_file_valid)" == "true" ]; then
+		echo "${FUNCNAME[0]} PASSED"
+	else
+		echo "${FUNCNAME[0]} FAILED"
+	fi
+}
+
+function get_goenv_env_value {
+	env_var_name=$1
+	if [ -z $env_var_name ]; then
+		(>&2 echo "Usage: ${FUNCNAME[0]} <ENV_VAR_NAME>")
+		return 
+	fi
+	ret=$(grep $env_var_name $GOENV_ENV_PATH | cut -d '=' -f 2)
+	printf "$ret"
+}
+
+
+function get_goroot_bootstrap_path {
+	get_goenv_env_value GOROOT_BOOTSTRAP
+}
+function test_get_goroot_bootstrap_path {
+	tmp_back_env_file=$(mktemp)
+	mv $GOENV_ENV_PATH $tmp_back_env_file
+	sample_data=/home/lex/.goenv/goroots/go1.11/go
+	printf "AVAR=foo\nGOROOT_BOOTSTRAP=${sample_data}\nBVAR=bar" > $GOENV_ENV_PATH
+	if [ "$(get_goroot_bootstrap_path)" == "$sample_data" ]; then
+		echo "${FUNCNAME[0]} PASSED"
+	else
+		echo "${FUNCNAME[0]} FAILED"
+	fi
+	mv $tmp_back_env_file $GOENV_ENV_PATH
+}
+
+function get_goroot_path {
+	goroot_path="$(get_goenv_env_value GOROOT=)"
+	if [ "$goroot_path" == "" ]; then
+		(>&2 echo "${FUNCNAME[0]}: GOROOT value missing in $GOENV_ENV_PATH")
+		return 
+	fi
+	printf $goroot_path
+}
+
+function ensure_go_roots_dir_exists {
+    if [ ! -d $GOENV_GOROOTS_PATH ]; then
+		mkdir -p $GOENV_GOROOTS_PATH
+    fi
+}
+function test_ensure_go_roots_dir_exists {
+    ensure_go_roots_dir_exists
+    if [ "$?" == "0" ]; then
+		echo "${FUNCNAME[0]} PASSED"
+	else
+		echo "${FUNCNAME[0]} FAILED"
+    fi
+}
+
+function path_with_this_dir_prepended {
+	path_to_add=$1
+	if [ -z $path_to_add ]; then
+		(>&2 echo "Usage: ${FUNCNAME[0]} <PATH_TO_ADD>")
+		return 
+	fi
+	new_path=""
+	PATH="$PATH\n"
+	printf "$PATH" | tr ':' '\n' | ( while read line
+		do
+			if [ "$line" != "$path_to_add" ] ; then
+				if [ "$new_path" == "" ]; then
+					new_path="$line"
+				else
+					new_path="$new_path:$line"
+				fi
 			fi
+		done
+		new_path="${path_to_add}:${new_path}"
+		printf $new_path
+	)
+}
+function test_path_with_this_dir_prepended {
+	save_path=$PATH
+	export PATH="/usr/local/bin:/usr/bin:/bin:~/bin"
+	new_path=$(path_with_this_dir_prepended /tmp)
+    if [ "$new_path" == "/tmp:${PATH}" ]; then
+		echo "${FUNCNAME[0]} PASSED"
+	else
+		echo "${FUNCNAME[0]} FAILED"
+    fi	
+	export PATH=$save_path
+}
+
+function add_to_path {
+	dir_to_prepend=$1
+	export PATH=$(path_with_this_dir_prepended $dir_to_prepend)
+}
+
+
+# $1 must be in this format: go1.11.1
+function install {
+    go_version=$1
+    if [ -z $go_version ]; then
+		echo "Missing GO_VERSION."
+		echo "Usage: $(basename $0) <GO_VERSION>"
+		echo "Example: $(basename $0) go1.11.1"
+		return &>/dev/null; exit 2
+    fi
+    if [ "$(is_valid_go_ver ${go_version})" == "false" ]; then
+		echo "Invalid GO_VERSION."
+		echo "Usage: $(basename $0) <GO_VERSION>"
+		echo "Example: $(basename $0) go1.11.1"
+		return &>/dev/null; exit 2
+    fi
+	ensure_go_roots_dir_exists
+    pushd $GOENV_GOROOTS_PATH
+    if [ -d "./$go_version" ]; then
+		echo "$go_version already exists.  Do you want to continue? (yes/no)"
+		read x && x=${x:-no}
+		if [ "$x" != "yes" ]; then
+			echo "WARNING: Since you didn't type 'yes' ... We're aborting!"
+			return &>/dev/null; exit 3
 		fi
-    else
-        echo "The requrested Go version ($VER) is not valid."
-        return
-    fi
-    # set_goenv_version
-}
+		rmrf "./$go_version"
+    fi   
 
-function uninstall {
-    VER=$1
-    if [[ $BREW_GO_ROOT == *"Cellar"* ]] && [[ -d $BREW_GO_ROOT/$VER ]]; then
-        printf "Removing $BREW_GO_ROOT/$VER..."
-        rm -rf $BREW_GO_ROOT/$VER
-        echo "Done."
-    else
-        echo "$VER is not installed."
-    fi
-
-    if [ "$VER" == "1.4" ]; then
-        brew uninstall go14
-        if [ "$?" != "0" ]; then
-            echo "Unable to uninstall version ($VER)"
-        else
-            rm /usr/local/Cellar/go/1.4.3
-        fi
-        elif [ "$VER" == "1.5" ]; then
-        brew uninstall go15
-        if [ "$?" != "0" ]; then
-            echo "Unable to install version ($VER)"
-        else
-            rm /usr/local/Cellar/go/1.5.4
-        fi
-        elif [ "$VER" == "1.6" ]; then
-        brew uninstall go
-        if [ "$?" != "0" ]; then
-            echo "Unable to install version ($VER)"
-        fi
-    else
-        echo "The requrested Go version ($VER) is not valid."
-        return
-    fi
-}
-
-function check {
-    tput setab 0
-    which go &>/dev/null
-    if [ "$?" != "0" ]; then
-        tput setaf 1
-        printf "ERROR:  Go command not found."
-    else
-        GOVER=$(goversion)
-        echo $PATH | grep "$GOBIN" &>/dev/null
-        if [ "$?" == "0" ]; then
-            IS_GOBIN_IN_PATH="yes"
-        else
-            IS_GOBIN_IN_PATH="no"
-        fi
-        if [ "$?" != "0" ]; then
-            tput setaf 1
-            printf "ERROR:  Go command not found."
-            elif [ "$IS_GOBIN_IN_PATH" == "no" ]; then
-            tput setaf 1
-            printf "ERROR:  GOBIN is not in the PATH environment variable."
-        else
-            if [[ $GOROOT == *"$GOVER"* ]]; then
-                if [ "$GOPATH" == "" ]; then
-                    tput setaf 3
-                    printf "WARNING: \$GOPATH is not set."
-                else
-                    TMPFILE="/tmp/$(date +%Y%m%d-%H%M%S)_GOPATH_ERR_FOUND"
-                    echo $GOPATH | tr ':' '\n' | while read line
-                    do
-                        if [[ ! -e "$line" ]]; then
-                            echo "true" > $TMPFILE
-                            tput setaf 3
-                            printf "WARNING: $line is not a valid directory. "
-                        fi
-                    done
-                    if [ ! -f $TMPFILE ]; then
-                        tput setaf 2
-                        printf $GOOD_STATUS;                  
-                    fi
-                    rm $TMPFILE 2>/dev/null
-                fi
-            else
-                tput setaf 1
-                printf "ERROR: \$GOROOT != Go version"
-            fi
-        fi
-    fi
-    tput sgr0
-}
-
-if [ "$1" == "-?" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "help" ]; then
-    echo "$INFO"
-
-elif [ "$1" == "init" ]; then
-    LATEST_BREW_GO_VER="$(lastest_brew_go_version)"
-    if ! which go > /dev/null && [ "$LATEST_BREW_GO_VER" != "" ]; then
-        echo ""
-        echo "Go is not currently installed but homebrew has a version.  Press Enter to install Go version $LATEST_BREW_GO_VER --or-- CTRL+C to Cancel."
-        read x
-        install $LATEST_BREW_GO_VER
-        echo "GOENV_VER_FILE: $GOENV_VER_FILE"
-        echo "$LATEST_BREW_GO_VER" > $GOENV_VER_FILE
-    fi
+	new_goroot="$HOME/.goenv/goroots/$go_version"
+	export GOROOT_BOOTSTRAP=$(get_goroot)
+	export GOROOT=$GOROOT_BOOTSTRAP
+	export GOPATH=$GOROOT_BOOTSTRAP
+	export GOBIN=$GOPATH/bin
+    save_goroot_bootstrap_path=$(get_goroot_bootstrap_path)
+	git clone $GOENV_GO_SOURCE_REPO $go_version
+	cd $go_version
+	git checkout $go_version
+    cd src
+    ./all.bash    
+	add_to_path "${GOROOT}/bin"
+    printf "GOROOT_BOOTSTRAP=${save_goroot_bootstrap_path}\nGOROOT=${new_goroot}\n" > $GOENV_ENV_PATH
     
-    cur_dir=$(pwd)
-    if [ "$cur_dir" != "$GOPATH" ]; then
-        echo "cur_dir ($cur_dir) != GOPATH ($GOPATH)"
-        echo "Continue to set GOPATH to $cur_dir  (CTRL+C)"
-        read x
+    popd
+}
+
+# $1 must be in this format: go1.11.1
+function uninstall {
+    go_version=$1
+    if [ -z $go_version ]; then
+		echo "Missing GO_VERSION."
+		echo "Usage: $(basename $0) <GO_VERSION>"
+		echo "Example: $(basename $0) go1.11.1"
+		return &>/dev/null; exit 2
     fi
-
-    export GOPATH="$cur_dir"
-    export GOBIN="$GOPATH/bin"
-    export PATH=$GOBIN:$PATH
-
-    if [ -s $GOENV_VER_FILE ]; then
-        switchgo $(cat $GOENV_VER_FILE)
+    if [ "$(is_valid_go_ver ${go_version})" == "false" ]; then
+		echo "Invalid GO_VERSION."
+		echo "Usage: $(basename $0) <GO_VERSION>"
+		echo "Example: $(basename $0) go1.11.1"
+		return &>/dev/null; exit 2
     fi
+	ensure_go_roots_dir_exists
+    rmrf $GOENV_GOROOTS_PATH/$go_version  	
+}
 
-elif [ "$1" == "persist" ]; then
+function list_installed_goroots {
+	ensure_go_roots_dir_exists
+	find $GOENV_GOROOTS_PATH -maxdepth 1 -type d | tail -n +2
+}
 
-    VER=$(goversion)
-    `cat $VER > $GOENV_VER_FILE`
+function list_available_go_versions {
+	ensure_go_roots_dir_exists
+	num_versions_installed=$(find $GOENV_GOROOTS_PATH -maxdepth 1 -type d | tail -n +2 | wc | awk '{print $1}')
+	if [ "$num_versions_installed" == "0" ]; then
+		go_version=go1.11.1
+		echo "We must download a go version in order to proceed.  About to download $go_version.  Do you want to continue? (yes/no)"
+		read x && x=${x:-no}
+		if [ "$x" != "yes" ]; then
+			echo "WARNING: Since you didn't type 'yes' ... We're aborting!"
+			return &>/dev/null
+		fi
+		git clone $GOENV_GO_SOURCE_REPO $go_version
+		cd $go_version
+	else
+		first_goroot=$(find $GOENV_GOROOTS_PATH -maxdepth 1 -type d | tail -n 1)
+		if [ ! -d $first_goroot ]; then
+			echo "Unable to find valid goenv GOROOT path in GOENV_GOROOTS_PATH ($GOENV_GOROOTS_PATH)"
+			return
+		fi
+		cd $first_goroot
+	fi
+	git tag | egrep '^go.+'
+}
 
-elif [ "$1" == "version" ]; then
-    if [ "$2" == "goenv" ] ; then
-      echo "$(goenv_version)"
-    else
-      echo $(goversion)
-    fi
+function info {
+	echo "
+GOROOT: $GOROOT
+GOPATH: $GOPATH
+GOBIN : $GOPBIN
+PATH: 
+$(echo $PATH | tr ':' '\n')
+"
+}
 
-elif [ "$1" == "versions" ]; then
-    echo "This feature has been DEPRECATED."
-    exit 5
-    # TODO: Add this feature back
-    if [ "$2" == "available" ] ; then
-        brew versions go
-    else
-        echo "$(goversions)"
-    fi
+function help {
+	echo "$INFO"
+}
 
-elif [ "$1" == "upgrade" ]; then
-    brew upgrade go
+function run_tests {
+	test_is_valid_go_ver
+	test_is_goenv_file_valid
+	test_ensure_go_roots_dir_exists
+	test_get_goroot_bootstrap_path
+	test_path_with_this_dir_prepended
+	test_get_goroot
+}
 
-elif [ "$1" == "install" ]; then
-    install $2
+set_env_vars
 
-
+if [ "$1" == "install" ]; then
+	shift 1
+	install "$@"
 elif [ "$1" == "uninstall" ]; then
-    uninstall $2
-
-elif [ "$1" == "setup" ]; then
-    printf "\nif which goenv > /dev/null; then . goenv init; fi" >> $HOME/.bashrc
-
-
-elif [ "$1" == "check" ]; then
-    STATUS=$(check)
-    echo "$STATUS"
-
-    if [ "$STATUS" == "$GOOD_STATUS" ]; then
-        exit 0
-     else
-        echo ""
-        echo "Go version: $(goversion)"
-        echo "\$GOROOT   : $GOROOT"
-        echo ""
-        echo "$TIP"
-        echo ""
-        exit 1
-    fi
-
+	shift 1
+	uninstall "$@"
 elif [ "$1" == "info" ]; then
-    status="$(check)"
-    echo "STATUS: $status"
-    if [[ ! "$status" == *"√"* ]]; then
-        echo "TIP: $TIP"
-    fi
-
-    echo "GOROOT: $GOROOT"
-    echo "GOPATH: $GOPATH"
-    echo "GOBIN : $GOBIN"
-    echo "GOOS  : $GOOS"
-    echo "GOARCH: $GOARCH"
-    if [ ! -z $VERBOSE ]; then
-       echo -e "----\nPATH: $(echo $PATH | tr ':' '\n')\n----"
-       echo "Current Go version: $(goversion)"
-       echo "Latest Brew Go version file: $LATEST_BREW_GO_VER_FILE"
-       echo "switchtogo version file: $GOENV_VER_FILE"
-       echo "switchtogo version: $(switchtogo_version)"
-       echo "goenv version: $(goenv_version)"
-       echo "$(goversions)"
-    fi
-
-elif [[ $1 =~ [0-9]\.[0-9]\.[0-9] ]] || [[ $1 =~ [0-9]\.[0-9] ]]; then
-    # set -x
-    # trap read debug
-    # Accepts versions of format:  Examples: 1.3.3, 1.4
-    switchgo $1
-else
-    usage
+	info
+elif [ "$1" == "help" ]; then
+	help
+elif [ "$1" == "list-installed-versions" ]; then
+	list_installed_goroots	
+elif [ "$1" == "list-available-versions" ]; then
+	list_available_go_versions	
+elif [ "$1" == "run-tests" ]; then
+	shift 1
+	run_tests "$@"
+elif [ "$1" == "set-env-vars" ]; then
+	set_env_vars
+elif [ "$1" == "print-env-vars" ]; then
+	print_env_vars
+elif [ "$1" == "get-goroot-path" ]; then
+	get_goroot_path
+elif [ "$1" == "get-goroot" ]; then
+	get_goroot 
+elif [ "$1" == "set-current-gopath" ]; then
+	set_current_gopath
 fi

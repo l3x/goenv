@@ -34,7 +34,7 @@ Assumptions:
 * You must have  access to the internet and git to install a new Go version.
 * Your OS's equivalent of build-essential must also be installed to install Go.
 * egrep and standard shell commands like grep, echo, printf and cat must be installed.
-* Go must already be installed (via your system package manager).
+* Go must already be installed (via your system package manager)/
 * The install goenv command adds goenv to your PATH env var in the bashrc file.
 * (Move that PATH command appropriately if you are using a shell other than Bash.)
 
@@ -44,11 +44,13 @@ Notes:
 * goenv version works on linux (likley also works on macOS and Windows).
 * You must be in a GOPATH directory to run the set command.
 * Source goenv commands that update environment variables. See examples.
-* To install goenv: 
-* 1) Download this goenv repo and cd into it (where the README.md file is).
-* 2) Run this:  ./bin/goenv install goenv
-* To uninstall goenv: 
-* 1) Remove the PATH export that was appended to your /home/lex/.bashrc
+
+* To install goenv, run the following commands:
+git clone https://github.com/l3x/goenv.git ~/.goenv
+~/.goenv/bin/goenv install goenv
+
+* To uninstall goenv (and all installed goroots):
+* 1) Remove the PATH export command  that was appended to your /home/lex/.bashrc
 * 2) Remove the /home/lex/.goenv directory
 
 Examples:

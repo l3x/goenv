@@ -347,6 +347,9 @@ function uninstall {
 		echo "Example: $(basename $0) go1.11.1"
 		return &>/dev/null; exit 2
     fi
+    if [ ! -z $2 ]; then
+		echo "This command deletes one goroot at a time.  You must rerun it for additional goroots versions"
+    fi
 	ensure_go_roots_dir_exists
     rmrf $GOENV_GOROOTS_PATH/$go_version  	
 }

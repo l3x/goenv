@@ -44,8 +44,12 @@ Notes:
 * goenv version works on linux (likley also works on macOS and Windows).
 * You must be in a GOPATH directory to run the set command.
 * Source goenv commands that update environment variables. See examples.
+* A Go binary must already be installed on your system
+- See https://golang.org/doc/install
+- macOS: brew install go
+- linux: https://www.ostechnix.com/install-go-language-linux/
 
-* To install goenv, run the following commands:
+* To install goenv (manages your installed versions of Go) run the following:
 git clone https://github.com/l3x/goenv.git ~/.goenv
 ~/.goenv/bin/goenv install goenv
 

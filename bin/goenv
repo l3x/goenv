@@ -74,10 +74,39 @@ $(echo $PATH | tr ':' '\n')
 "
 }
 
+function strindex() { 
+	x="${1%%$2*}"
+	[[ "$x" = "$1" ]] && echo -1 || echo "${#x}"
+}
+
+num_occurrences () { 
+    string=$1;
+    char=$2;
+    if [ "$char" == "\n" ]; then
+        printf "$string" | wc -l | sed 's/ //g';
+    else
+        awk -F"${char}" '{printf NF-1}' <<< "${string}";
+    fi
+}
+
 function set_current_gopath {
 	if [ ! -e "$(pwd)/src" ]; then
-		echo "You must be in a valid go project (with a src directory) to set GOPATH, GOBIN and PATH."
-		return
+		err_msg="You must be in a valid go project (with a src directory) to set GOPATH, GOBIN and PATH."
+		# Look for gopath dir in current path
+		path=$(pwd)
+		project_name="$(basename $(pwd))"
+		if [ "$(num_occurrences "$path" "$project_name")" == "2" ]; then
+			pos=$(strindex "$path" "$project_name")
+			gopath="${path:0:$pos}$project_name"
+			read x
+			if [ ! -d "$gopath" ]; then
+				echo $err_msg;return
+			else
+				cd "$gopath"
+			fi
+		else
+			echo $err_msg;return
+		fi
 	fi
 	set_env_vars
 	printf "$(pwd)" > $GOENV_CURRENT_GOPATH
@@ -328,7 +357,7 @@ function install_go {
 	cd $go_version
 	git checkout $go_version
     cd src
-    ./all.bash    
+    ./make.bash  #/all.bash runs old go1.4 tests that fail    
 	add_to_path "${GOROOT}/bin"
     printf "GOROOT_BOOTSTRAP=${save_goroot_bootstrap_path}\nGOROOT=${new_goroot}\n" > $GOENV_ENV_PATH
     

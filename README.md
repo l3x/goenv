@@ -14,6 +14,17 @@
 
 Use goenv to find, (un)install or start using any version of Go.
 
+## Suggested Installation Method
+```
+git clone https://github.com/l3x/goenv.git $HOME/.goenv
+```
+Put this in your .bashrc (or .bash_exports) file:
+```
+export PATH="$PATH:$HOME/.goenv/bin"
+```
+When you open a new terminal you will be able to execute goenv commands.
+
+
 **Easy to use** 
 * Install any version of Go.
 * Set any Go project to use any goenv installed version of Go.

@@ -155,10 +155,15 @@ function is_prereq_satisfied {
 
 function get_goroot {
 	if [ -L $(which go) ]; then
-		printf $(echo $(dirname $(dirname $(ls -l $(which go) | cut -d ' ' -f 12))))
+		# ls -l $(which go)
+		# lrwxrwxrwx 1 root root 18 Apr 15 03:29 /usr/bin/go -> /usr/lib/go/bin/go
+		go_bin_path=$(echo "$(ls -l $(which go))" | awk '{ print $NF }')
+		to_pos=$(echo "${go_bin_path}" | grep -b -o '/bin' | cut -d: -f1)
 	else
-		printf $(echo $(dirname $(dirname $(ls -l $(which go) | cut -d ' ' -f 10))))
+		go_bin_path=$(echo "ls -l $(which go)" | awk '{ print $NF }')
+		to_pos=$(echo "${go_bin_path}" | grep -b -o '/bin' | cut -d: -f1)
 	fi
+	printf ${go_bin_path:0:to_pos}
 }
 function test_get_goroot {
 	goroot="$(get_goroot)"
@@ -430,7 +435,7 @@ function list_available_go_versions {
 		if [ -d $tmp_goroot_path/$go_version ]; then
 			cd $tmp_goroot_path
 		else
-			mkdir $tmp_goroot_path
+			mkdir -p $tmp_goroot_path
 			echo "We must download a go version in order to proceed.  About to download $go_version.  Do you want to continue? (yes/no)"
 			read x && x=${x:-no}
 			if [ "$x" != "yes" ]; then

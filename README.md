@@ -24,7 +24,6 @@ export PATH="$PATH:$HOME/.goenv/bin"
 ```
 When you open a new terminal you will be able to execute goenv commands.
 
-
 **Easy to use** 
 * Install any version of Go.
 * Set any Go project to use any goenv installed version of Go.
